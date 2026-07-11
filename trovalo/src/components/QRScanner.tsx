@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Html5Qrcode } from "html5-qrcode";
+import { Scanner } from "@yudiel/react-qr-scanner";
 
 interface QRScannerProps {
   onBack: () => void;
@@ -8,55 +8,8 @@ interface QRScannerProps {
 
 export const QRScanner: React.FC<QRScannerProps> = ({ onBack }) => {
   const { t } = useTranslation();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const scannerRef = useRef<Html5Qrcode | null>(null);
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [cameras, setCameras] = useState<{ id: string; label: string }[]>([]);
-  const [selectedCamera, setSelectedCamera] = useState<string>("");
-
-  useEffect(() => {
-    const scanner = new Html5Qrcode("qr-scanner-container");
-    scannerRef.current = scanner;
-
-    Html5Qrcode.getCameras()
-      .then((devices) => {
-        if (devices.length === 0) {
-          setError(t("scan.no_camera"));
-          return;
-        }
-        const camList = devices.map((d) => ({
-          id: d.id,
-          label: d.label || `Camera ${devices.indexOf(d) + 1}`,
-        }));
-        setCameras(camList);
-        setSelectedCamera(camList[0].id);
-      })
-      .catch(() => setError(t("scan.camera_error")));
-
-    return () => {
-      scanner.stop().catch(() => {});
-    };
-  }, [t]);
-
-  useEffect(() => {
-    if (!selectedCamera || !scannerRef.current) return;
-
-    const scanner = scannerRef.current;
-    scanner.stop().catch(() => {});
-
-    scanner
-      .start(
-        selectedCamera,
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        (decodedText) => {
-          setResult(decodedText);
-          scanner.stop().catch(() => {});
-        },
-        () => {},
-      )
-      .catch((err) => setError(String(err)));
-  }, [selectedCamera]);
 
   return (
     <div>
@@ -90,25 +43,18 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onBack }) => {
         </div>
       )}
 
-      {cameras.length > 1 && (
-        <select
-          value={selectedCamera}
-          onChange={(e) => setSelectedCamera(e.target.value)}
-          className="mb-4 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        >
-          {cameras.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.label}
-            </option>
-          ))}
-        </select>
-      )}
-
-      <div
-        id="qr-scanner-container"
-        ref={containerRef}
-        className="w-full max-w-md mx-auto bg-black rounded-lg overflow-hidden"
-      />
+      <div className="w-full max-w-md mx-auto bg-black rounded-lg overflow-hidden">
+        <Scanner
+          onScan={(detectedCodes) => {
+            const code = detectedCodes[0]?.rawValue;
+            if (code && !result) {
+              setResult(code);
+            }
+          }}
+          onError={(err) => setError(err?.message || String(err))}
+          scanDelay={500}
+        />
+      </div>
 
       {result && (
         <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-4">

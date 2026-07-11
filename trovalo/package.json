@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
+    "@yudiel/react-qr-scanner": "^2.6.0",
     "dexie": "^3.2.4",
-    "html5-qrcode": "^2.3.8",
     "i18next": "^23.7.6",
     "i18next-browser-languagedetector": "^7.1.0",
     "qrcode": "^1.5.4",
