@@ -1,0 +1,38 @@
+{
+  "sync": {
+    "ready": "Sincronizzato e Pronto",
+    "offline": "Modalità Offline Attiva",
+    "error": "Errore di Connessione"
+  },
+  "ui": {
+    "scan": "Scansiona Scatola",
+    "search": "Cerca Inventario"
+  },
+  "nav": {
+    "back_to_home": "Torna alla Home",
+    "generate_qr": "Genera Codici QR"
+  },
+  "qr": {
+    "title": "Generatore di Codici QR",
+    "number_of_codes": "Numero di codici QR",
+    "size_cm": "Dimensione QR (cm)",
+    "min_size": "Minimo 5 cm",
+    "preview": "Anteprima",
+    "codes": "Codici",
+    "generate": "Genera Codici QR",
+    "generating": "Generazione in corso...",
+    "back": "Torna alle impostazioni",
+    "generated_count": "Generati"
+  },
+  "device": {
+    "not_authorized": "Dispositivo Non Autorizzato",
+    "contact_admin": "Questo dispositivo non è nella whitelist. Contatta l'amministratore per ottenere l'accesso.",
+    "send_id_to_admin": "Copia l'ID del dispositivo sopra e invialo al tuo amministratore.",
+    "device_info": "Informazioni Dispositivo",
+    "id": "ID Dispositivo",
+    "status": "Stato",
+    "authorized": "Autorizzato",
+    "pending": "In Attesa di Autorizzazione",
+    "storage_hint": "L'ID del dispositivo è memorizzato in modo ridondante (localStorage + IndexedDB) per resistere alla cancellazione di iOS."
+  }
+}

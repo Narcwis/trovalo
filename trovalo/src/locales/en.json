@@ -1,0 +1,38 @@
+{
+  "sync": {
+    "ready": "Synced & Ready for Garage",
+    "offline": "Offline Mode Active",
+    "error": "Sync Engine Connection Error"
+  },
+  "ui": {
+    "scan": "Scan Box",
+    "search": "Search Inventory"
+  },
+  "nav": {
+    "back_to_home": "Back to Home",
+    "generate_qr": "Generate QR Codes"
+  },
+  "qr": {
+    "title": "QR Code Generator",
+    "number_of_codes": "Number of QR codes",
+    "size_cm": "QR size (cm)",
+    "min_size": "Minimum 5 cm",
+    "preview": "Preview",
+    "codes": "Codes",
+    "generate": "Generate QR Codes",
+    "generating": "Generating...",
+    "back": "Back to settings",
+    "generated_count": "Generated"
+  },
+  "device": {
+    "not_authorized": "Device Not Authorized",
+    "contact_admin": "This device is not on the whitelist. Please contact the administrator to gain access.",
+    "send_id_to_admin": "Copy the device ID above and send it to your administrator.",
+    "device_info": "Device Information",
+    "id": "Device ID",
+    "status": "Status",
+    "authorized": "Authorized",
+    "pending": "Pending Authorization",
+    "storage_hint": "Device ID is stored redundantly (localStorage + IndexedDB) to survive iOS storage wipes."
+  }
+}

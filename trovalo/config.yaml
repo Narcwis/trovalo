@@ -1,0 +1,23 @@
+name: "Trovalo"
+description: "Offline-first local-syncing garage inventory manager"
+version: "1.0.0"
+slug: "trovalo"
+init: false
+arch:
+  - amd64
+  - aarch64
+ports:
+  8080/tcp: 8080
+map:
+  - share:rw
+  - config:rw
+options:
+  allowed_devices: []
+  allow_new_devices: true
+schema:
+  allowed_devices:
+    type: "array"
+    items:
+      type: "string"
+  allow_new_devices:
+    type: "boolean"
