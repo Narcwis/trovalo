@@ -173,7 +173,7 @@ const App: React.FC = () => {
             onBack={() => setView("main")}
           />
         ) : view === "qr-generator" ? (
-          <QRCodeGenerator />
+          <QRCodeGenerator onBack={() => setView("main")} />
         ) : dbReady ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

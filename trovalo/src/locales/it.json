@@ -66,7 +66,13 @@
     "item_count": "oggetto",
     "item_count_plural": "oggetti",
     "move_to_bin": "Sposta nel Cestino",
-    "in_bin": "Questa scatola è nel Cestino."
+    "in_bin": "Questa scatola è nel Cestino.",
+    "edit": "Modifica",
+    "save": "Salva",
+    "saving": "Salvataggio...",
+    "cancel": "Annulla",
+    "add_item": "Aggiungi",
+    "item_placeholder": "Aggiungi oggetto"
   },
   "qr": {
     "title": "Generatore di Codici QR",

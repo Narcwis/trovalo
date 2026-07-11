@@ -41,97 +41,178 @@ export const QRCodePrintGrid: React.FC<QRCodePrintGridProps> = ({
 
   return (
     <div className="print-content">
-      <div className="print:hidden mb-4 p-3 bg-blue-50 text-blue-800 rounded-md text-sm">
-        <p>
-          <strong>Layout:</strong> {cols} columns &times; {rows} rows ={" "}
-          {perPage} QR codes per A4 page
-        </p>
-        <p>
-          <strong>QR size:</strong> {qrSizeCm} cm ({qrSizeMm} mm) &mdash;{" "}
-          {pageCount} page{pageCount > 1 ? "s" : ""}
-        </p>
+      <div className="print:hidden sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm px-4 py-3">
+        <div className="mb-2 p-3 bg-blue-50 text-blue-800 rounded-md text-sm">
+          <p>
+            <strong>Layout:</strong> {cols} columns &times; {rows} rows ={" "}
+            {perPage} QR codes per A4 page
+          </p>
+          <p>
+            <strong>QR size:</strong> {qrSizeCm} cm ({qrSizeMm} mm) &mdash;{" "}
+            {pageCount} page{pageCount > 1 ? "s" : ""}
+          </p>
+        </div>
+        <div className="flex justify-center">
+          <button
+            onClick={() => window.print()}
+            className="px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+          >
+            🖨️ Print QR Codes
+          </button>
+        </div>
       </div>
 
-      {Array.from({ length: pageCount }).map((_, pageIdx) => (
-        <div
-          key={pageIdx}
-          className="qr-page"
-          style={{
-            width: `${A4_MM_WIDTH}mm`,
-            minHeight: `${A4_MM_HEIGHT}mm`,
-            padding: `${MARGIN_MM}mm`,
-            boxSizing: "border-box",
-            pageBreakAfter: "always",
-            display: "flex",
-            flexWrap: "wrap",
-            alignContent: "flex-start",
-            gap: `${GAP_MM}mm`,
-          }}
-        >
-          {Array.from({ length: rows }).map((_, rowIdx) =>
-            Array.from({ length: cols }).map((_, colIdx) => {
-              const idx = pageIdx * perPage + rowIdx * cols + colIdx;
-              const code = padded[idx];
-              if (!code || !code.dataUrl) {
+      <div className="print:hidden overflow-x-hidden">
+        {Array.from({ length: pageCount }).map((_, pageIdx) => (
+          <div
+            key={pageIdx}
+            className="qr-page"
+            style={{
+              width: `${A4_MM_WIDTH}mm`,
+              minHeight: `${A4_MM_HEIGHT}mm`,
+              padding: `${MARGIN_MM}mm`,
+              boxSizing: "border-box",
+              display: "flex",
+              flexWrap: "wrap",
+              alignContent: "flex-start",
+              gap: `${GAP_MM}mm`,
+              marginBottom: "12px",
+              border: "1px solid #e5e7eb",
+              borderRadius: "4px",
+            }}
+          >
+            {Array.from({ length: rows }).map((_, rowIdx) =>
+              Array.from({ length: cols }).map((_, colIdx) => {
+                const idx = pageIdx * perPage + rowIdx * cols + colIdx;
+                const code = padded[idx];
+                if (!code || !code.dataUrl) {
+                  return (
+                    <div
+                      key={`${rowIdx}-${colIdx}`}
+                      style={{
+                        width: `${qrSizeMm}mm`,
+                        height: `${qrSizeMm}mm`,
+                      }}
+                    />
+                  );
+                }
                 return (
                   <div
-                    key={`${rowIdx}-${colIdx}`}
+                    key={code.id}
                     style={{
                       width: `${qrSizeMm}mm`,
                       height: `${qrSizeMm}mm`,
-                    }}
-                  />
-                );
-              }
-              return (
-                <div
-                  key={code.id}
-                  style={{
-                    width: `${qrSizeMm}mm`,
-                    height: `${qrSizeMm}mm`,
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    boxSizing: "border-box",
-                  }}
-                >
-                  <img
-                    src={code.dataUrl}
-                    alt={`QR ${code.id}`}
-                    style={{
-                      width: "100%",
-                      height: "auto",
-                      display: "block",
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: `${Math.max(6, qrSizeMm * 0.12)}px`,
-                      fontFamily: "monospace",
-                      textAlign: "center",
-                      marginTop: "2px",
-                      color: "#000",
-                      lineHeight: 1.1,
-                      wordBreak: "break-all",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxSizing: "border-box",
                     }}
                   >
-                    {code.id}
-                  </span>
-                </div>
-              );
-            }),
-          )}
-        </div>
-      ))}
+                    <img
+                      src={code.dataUrl}
+                      alt={`QR ${code.id}`}
+                      style={{
+                        width: "100%",
+                        height: "auto",
+                        display: "block",
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontSize: `${Math.max(6, qrSizeMm * 0.12)}px`,
+                        fontFamily: "monospace",
+                        textAlign: "center",
+                        marginTop: "2px",
+                        color: "#000",
+                        lineHeight: 1.1,
+                        wordBreak: "break-all",
+                      }}
+                    >
+                      {code.id}
+                    </span>
+                  </div>
+                );
+              }),
+            )}
+          </div>
+        ))}
+      </div>
 
-      <div className="print:hidden mt-6 flex justify-center">
-        <button
-          onClick={() => window.print()}
-          className="px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
-        >
-          🖨️ Print QR Codes
-        </button>
+      {/* Print-only rendering: real A4 pages */}
+      <div className="print-only">
+        {Array.from({ length: pageCount }).map((_, pageIdx) => (
+          <div
+            key={pageIdx}
+            className="qr-page"
+            style={{
+              width: `${A4_MM_WIDTH}mm`,
+              minHeight: `${A4_MM_HEIGHT}mm`,
+              padding: `${MARGIN_MM}mm`,
+              boxSizing: "border-box",
+              pageBreakAfter: "always",
+              display: "flex",
+              flexWrap: "wrap",
+              alignContent: "flex-start",
+              gap: `${GAP_MM}mm`,
+            }}
+          >
+            {Array.from({ length: rows }).map((_, rowIdx) =>
+              Array.from({ length: cols }).map((_, colIdx) => {
+                const idx = pageIdx * perPage + rowIdx * cols + colIdx;
+                const code = padded[idx];
+                if (!code || !code.dataUrl) {
+                  return (
+                    <div
+                      key={`${rowIdx}-${colIdx}`}
+                      style={{
+                        width: `${qrSizeMm}mm`,
+                        height: `${qrSizeMm}mm`,
+                      }}
+                    />
+                  );
+                }
+                return (
+                  <div
+                    key={code.id}
+                    style={{
+                      width: `${qrSizeMm}mm`,
+                      height: `${qrSizeMm}mm`,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    <img
+                      src={code.dataUrl}
+                      alt={`QR ${code.id}`}
+                      style={{
+                        width: "100%",
+                        height: "auto",
+                        display: "block",
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontSize: `${Math.max(6, qrSizeMm * 0.12)}px`,
+                        fontFamily: "monospace",
+                        textAlign: "center",
+                        marginTop: "2px",
+                        color: "#000",
+                        lineHeight: 1.1,
+                        wordBreak: "break-all",
+                      }}
+                    >
+                      {code.id}
+                    </span>
+                  </div>
+                );
+              }),
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

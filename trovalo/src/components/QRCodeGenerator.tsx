@@ -36,7 +36,14 @@ async function generateWithOverlay(
   return canvas.toDataURL();
 }
 
-export const QRCodeGenerator: React.FC = () => {
+const backBtn =
+  "mb-4 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 hover:border-gray-400 transition-colors flex items-center gap-2";
+
+interface QRCodeGeneratorProps {
+  onBack?: () => void;
+}
+
+export const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({ onBack }) => {
   const { t } = useTranslation();
   const [count, setCount] = useState(10);
   const [startNumber, setStartNumber] = useState(1);
@@ -79,139 +86,139 @@ export const QRCodeGenerator: React.FC = () => {
   return (
     <div>
       {!codes ? (
-        <div className="max-w-lg mx-auto">
-          <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
-            <div>
-              <label
-                htmlFor="qr-count"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                {t("qr.number_of_codes")}
-              </label>
-              <input
-                id="qr-count"
-                type="number"
-                min={MIN_COUNT}
-                max={MAX_COUNT}
-                value={count}
-                onChange={(e) => {
-                  const v = parseInt(e.target.value, 10);
-                  if (!isNaN(v))
-                    setCount(Math.min(MAX_COUNT, Math.max(MIN_COUNT, v)));
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                {MIN_COUNT}–{MAX_COUNT}
-              </p>
-            </div>
-
-            <div>
-              <label
-                htmlFor="qr-start"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                {t("qr.start_number")}
-              </label>
-              <input
-                id="qr-start"
-                type="number"
-                min={1}
-                value={startNumber}
-                onChange={(e) => {
-                  const v = parseInt(e.target.value, 10);
-                  if (!isNaN(v)) setStartNumber(Math.max(1, v));
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                {t("qr.start_number_hint")}
-              </p>
-            </div>
-
-            <div>
-              <label
-                htmlFor="qr-size"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                {t("qr.size_cm")}
-              </label>
-              <div className="flex items-center gap-3">
-                <input
-                  id="qr-size"
-                  type="range"
-                  min={MIN_QR_SIZE_CM}
-                  max={MAX_QR_SIZE_CM}
-                  step={0.5}
-                  value={qrSizeCm}
-                  onChange={(e) => setQrSizeCm(parseFloat(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                />
-                <span className="text-sm font-medium text-gray-900 w-12 text-right">
-                  {qrSizeCm} cm
-                </span>
-              </div>
-              <p className="mt-1 text-xs text-gray-500">
-                {t("qr.min_size")}: {MIN_QR_SIZE_CM} cm
-              </p>
-            </div>
-
-            <div className="p-3 bg-gray-50 rounded-md text-sm text-gray-600">
-              <p>
-                <strong>{t("qr.preview")}:</strong> {count}{" "}
-                {t("qr.codes").toLowerCase()} &times; {qrSizeCm} cm ={" "}
-                {(() => {
-                  const qrSizeMm = qrSizeCm * 10;
-                  const usableW = 210 - 30;
-                  const usableH = 297 - 30;
-                  const cellSize = qrSizeMm + 5;
-                  const cols = Math.floor(usableW / cellSize);
-                  const rows = Math.floor(usableH / cellSize);
-                  const perPage = cols * rows;
-                  const pages = Math.ceil(count / perPage);
-                  return `${cols}×${rows} per page, ${pages} page${pages > 1 ? "s" : ""}`;
-                })()}
-              </p>
-              <p className="mt-1 text-gray-400">
-                {t("qr.numbering_from")} {startNumber}{" "}
-                {t("qr.to")} {startNumber + count - 1}
-              </p>
-            </div>
-
-            <button
-              onClick={handleGenerate}
-              disabled={generating}
-              className="w-full px-4 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400 disabled:cursor-not-allowed transition-colors shadow-sm flex items-center justify-center gap-2"
-            >
-              {generating ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  {t("qr.generating")}
-                </>
-              ) : (
-                t("qr.generate")
-              )}
+        <div>
+          {onBack && (
+            <button onClick={onBack} className={backBtn}>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              {t("nav.back_to_home")}
             </button>
+          )}
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">
+            {t("qr.title")}
+          </h2>
+          <div className="max-w-lg mx-auto">
+            <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
+              <div>
+                <label
+                  htmlFor="qr-count"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  {t("qr.number_of_codes")}
+                </label>
+                <input
+                  id="qr-count"
+                  type="number"
+                  min={MIN_COUNT}
+                  max={MAX_COUNT}
+                  value={count}
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value, 10);
+                    if (!isNaN(v))
+                      setCount(Math.min(MAX_COUNT, Math.max(MIN_COUNT, v)));
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  {MIN_COUNT}–{MAX_COUNT}
+                </p>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="qr-start"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  {t("qr.start_number")}
+                </label>
+                <input
+                  id="qr-start"
+                  type="number"
+                  min={1}
+                  value={startNumber}
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value, 10);
+                    if (!isNaN(v)) setStartNumber(Math.max(1, v));
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  {t("qr.start_number_hint")}
+                </p>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="qr-size"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  {t("qr.size_cm")}
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    id="qr-size"
+                    type="range"
+                    min={MIN_QR_SIZE_CM}
+                    max={MAX_QR_SIZE_CM}
+                    step={0.5}
+                    value={qrSizeCm}
+                    onChange={(e) => setQrSizeCm(parseFloat(e.target.value))}
+                    className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                  />
+                  <span className="text-sm font-medium text-gray-900 w-12 text-right">
+                    {qrSizeCm} cm
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  {t("qr.min_size")}: {MIN_QR_SIZE_CM} cm
+                </p>
+              </div>
+
+              <div className="p-3 bg-gray-50 rounded-md text-sm text-gray-600">
+                <p>
+                  <strong>{t("qr.preview")}:</strong> {count}{" "}
+                  {t("qr.codes").toLowerCase()} &times; {qrSizeCm} cm ={" "}
+                  {(() => {
+                    const qrSizeMm = qrSizeCm * 10;
+                    const usableW = 210 - 30;
+                    const usableH = 297 - 30;
+                    const cellSize = qrSizeMm + 5;
+                    const cols = Math.floor(usableW / cellSize);
+                    const rows = Math.floor(usableH / cellSize);
+                    const perPage = cols * rows;
+                    const pages = Math.ceil(count / perPage);
+                    return `${cols}×${rows} per page, ${pages} page${pages > 1 ? "s" : ""}`;
+                  })()}
+                </p>
+                <p className="mt-1 text-gray-400">
+                  {t("qr.numbering_from")} {startNumber}{" "}
+                  {t("qr.to")} {startNumber + count - 1}
+                </p>
+              </div>
+
+              <button
+                onClick={handleGenerate}
+                disabled={generating}
+                className="w-full px-4 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400 disabled:cursor-not-allowed transition-colors shadow-sm flex items-center justify-center gap-2"
+              >
+                {generating ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    {t("qr.generating")}
+                  </>
+                ) : (
+                  t("qr.generate")
+                )}
+              </button>
+            </div>
           </div>
         </div>
       ) : (
         <div>
-          <button
-            onClick={() => setCodes(null)}
-            className="mb-4 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-1"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
+          <button onClick={() => setCodes(null)} className={backBtn}>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             {t("qr.back")}
           </button>

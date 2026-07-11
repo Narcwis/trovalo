@@ -13,7 +13,6 @@ body {
 
 /* Print styles for QR code pages */
 @media print {
-  /* Hide everything except the print content */
   body * {
     visibility: hidden;
   }
@@ -27,18 +26,23 @@ body {
     top: 0;
     width: 100%;
   }
+  .print-only {
+    display: block !important;
+  }
   .qr-page {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
   }
-  /* Remove Tailwind's print:hidden from print button wrapper */
   .print\:hidden {
     display: none !important;
   }
-  /* Ensure pages break properly */
   @page {
     size: A4 portrait;
     margin: 0;
   }
+}
+
+.print-only {
+  display: none;
 }
