@@ -1,8 +1,9 @@
 {
   "sync": {
+    "connecting": "Connessione al database...",
     "ready": "Sincronizzato e Pronto",
     "offline": "Modalità Offline Attiva",
-    "error": "Errore di Connessione"
+    "error": "Errore di Connessione al Database"
   },
   "ui": {
     "scan": "Scansiona Scatola",
@@ -25,14 +26,8 @@
     "generated_count": "Generati"
   },
   "device": {
-    "not_authorized": "Dispositivo Non Autorizzato",
-    "contact_admin": "Questo dispositivo non è nella whitelist. Contatta l'amministratore per ottenere l'accesso.",
-    "send_id_to_admin": "Copia l'ID del dispositivo sopra e invialo al tuo amministratore.",
     "device_info": "Informazioni Dispositivo",
     "id": "ID Dispositivo",
-    "status": "Stato",
-    "authorized": "Autorizzato",
-    "pending": "In Attesa di Autorizzazione",
     "storage_hint": "L'ID del dispositivo è memorizzato in modo ridondante (localStorage + IndexedDB) per resistere alla cancellazione di iOS."
   }
 }
