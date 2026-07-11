@@ -1,354 +1,173 @@
-# Development Specification: Trovalo (HAOS Custom Add-on Repository)
+# Trovalo — HAOS Custom Add-on: Garage Inventory Manager
 
-`Trovalo` is an offline-first, local-syncing garage inventory management application built explicitly to run as a **Standalone Home Assistant OS (HAOS) Add-on Repository**. It targets an environment completely devoid of internet, Wi-Fi, or cellular connectivity (the garage). It allows multiple family members using different platforms (Android and iOS) to audit and trace physical boxes seamlessly, while ensuring the background compute remains extremely lightweight on the host environment.
+[![HAOS Add-on](https://img.shields.io/badge/HAOS-Add--on-blue)](https://www.home-assistant.io/addons/)
 
-## 1. Repository Configuration & Architecture
+**Trovalo** is an offline-first, local-syncing garage inventory management application that runs as a **Home Assistant OS (HAOS) Custom Add-on**. It is designed for environments with no internet, Wi-Fi, or cellular connectivity (the garage). Multiple family members on Android and iOS can audit and trace physical storage boxes seamlessly, with lightweight background compute on the host.
 
-This repository is strictly structured as a **Home Assistant Custom Add-on Repository**. It must be parseable by the HAOS Supervisor so it can be added natively via the Home Assistant Add-on Store.
+---
 
-### Directory Structure
+## Features
 
-The repository must follow this exact layout:
+- **Offline-first** — All reads/writes hit the local RxDB (IndexedDB) database. No real-time network dependency.
+- **Multi-device sync** — CouchDB-compatible sync via PouchDB + Express. Changes propagate when devices are on the same LAN.
+- **Device whitelist** — Lock down access to authorized devices via HAOS Supervisor configuration.
+- **QR Code Generator** — Generate and print A4 sheets of QR codes for physical box labels. Configurable count (1–500) and size (5–10 cm).
+- **i18n** — English and Italian translations built in. Auto-detects browser language.
+- **PWA** — Installable as a standalone app on iOS and Android. Service worker with Workbox caching.
+- **Traffic-light sync indicator** — Green (synced), Yellow (offline), Red (error) with localized status text.
 
-```text
+---
+
+## Repository Structure
+
+```
 /
-├── repository.yaml      # Root HAOS repository manifest
-└── trovalo/             # The application add-on directory
-    ├── config.yaml      # Add-on configuration manifest
-    ├── Dockerfile       # Container build instructions
-    ├── package.json     
-    ├── server.js        # Backend sync and static host
-    ├── vite.config.ts   # PWA build configuration
-    └── src/             # React/Vite frontend source code
-        ├── locales/     # i18n Translation dictionaries
+├── .gitignore
+├── repository.yaml              # HAOS repository manifest
+└── trovalo/                     # The add-on directory
+    ├── config.yaml              # Add-on config + device whitelist schema
+    ├── Dockerfile               # Node 20-alpine container
+    ├── package.json
+    ├── server.js                # Express + PouchDB backend
+    ├── vite.config.ts           # Vite + PWA build config
+    ├── tsconfig.json
+    ├── tailwind.config.js
+    ├── postcss.config.js
+    ├── index.html
+    ├── public/
+    │   ├── icon-192.svg
+    │   └── icon-512.svg
+    └── src/
+        ├── main.tsx             # React entry point
+        ├── App.tsx              # Main app with view routing
+        ├── index.css            # Tailwind + print styles
+        ├── i18n.ts              # i18next configuration
+        ├── database.ts          # RxDB + CouchDB replication
+        ├── device.ts            # Device identity (UUID + fingerprint)
+        ├── vite-env.d.ts
+        ├── locales/
         │   ├── en.json
         │   └── it.json
-        ├── i18n.ts      # i18n configuration
-        ├── database.ts  # RxDB schema and CouchDB sync
         └── components/
-
-```
-
-### A. Root Repository Manifest (`/repository.yaml`)
-
-This file sits at the root of the Git repository to define the repository globally to Home Assistant.
-
-```yaml
-name: "Trovalo Add-on Repository"
-url: "https://github.com/YOUR_GITHUB_USERNAME/trovalo-hassio-repo"
-maintainer: "Local Admin"
-
-```
-
-### B. Add-on Configuration (`/trovalo/config.yaml`)
-
-This file defines the specific add-on container parameters for the Supervisor.
-
-```yaml
-name: "Trovalo"
-description: "Offline-first local-syncing garage inventory manager"
-version: "1.0.0"
-slug: "trovalo"
-init: false
-arch:
-  - amd64
-  - aarch64
-ports:
-  8080/tcp: 8080
-map:
-  - share:rw
-options: {}
-schema: {}
-
+            ├── SyncIndicator.tsx       # Traffic-light sync banner
+            ├── QRCodeGenerator.tsx     # QR code config form
+            └── QRCodePrintGrid.tsx     # A4 print layout engine
 ```
 
 ---
 
-## 2. Container Build & Backend Framework
+## Installation
 
-The application runs entirely within the supervised Docker environment. To avoid running heavy rendering servers, we compile the frontend into static files and serve them alongside an embedded CouchDB-compatible sync endpoint using Express.
+### 1. Add the repository to HAOS
 
-### A. Container Definition (`/trovalo/Dockerfile`)
+1. Go to **Settings → Add-ons → Add-on Store**
+2. Click the **⋮** menu → **Repositories**
+3. Add this repository URL:
+   ```
+   https://github.com/YOUR_GITHUB_USERNAME/trovalo
+   ```
+4. The **Trovalo** add-on will appear in the store
 
-```dockerfile
-FROM node:20-alpine
+### 2. Install and configure
 
-# HAOS specific persistent storage layer mapped via Supervisor
-ENV DB_PATH=/data/trovalo_db
-WORKDIR /app
+1. Click **Install** (this builds the Docker container)
+2. Go to the **Configuration** tab
+3. Set the device whitelist:
+   - `allow_new_devices`: `true` (first-time setup) or `false` (locked down)
+   - `allowed_devices`: `["device-uuid-here"]` — paste device IDs from the app footer
+4. Start the add-on
+5. Open **Web UI** (port 8080)
 
-# Install dependency configurations
-COPY package*.json ./
-RUN npm install
+---
 
-# Copy source repository structure and run static build compilation
-COPY . .
-RUN npm run build
+## Usage
 
-EXPOSE 8080
-CMD ["node", "server.js"]
+### Home screen
 
-```
+- **Scan Box** — Scan a QR code on a physical box (uses `html5-qrcode` camera scanner)
+- **Search Inventory** — Search boxes by zone or contents
+- **Generate QR Codes** — Create printable A4 sheets of box labels
 
-### B. Backend Sync Engine (`/trovalo/server.js`)
+### QR Code Generator
 
-```javascript
-import express from 'express';
-import PouchDB from 'pouchdb';
-import expressPouchDB from 'express-pouchdb';
-import path from 'path';
-import fs from 'fs';
+1. Set the number of codes (1–500)
+2. Adjust the size with the slider (5–10 cm, minimum 5 cm)
+3. See the live A4 layout preview (e.g., "3×4 per page, 3 pages")
+4. Click **Generate QR Codes**
+5. Click **🖨️ Print QR Codes** — prints A4 pages with proper margins and page breaks
 
-// Persist the database in the HAOS /data partition so it survives container restarts
-const dbDir = process.env.DB_PATH || './db';
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
-}
+### Device whitelist
 
-const app = express();
+1. Open the app on any device
+2. Scroll to the footer and expand **Device Information**
+3. Copy the **Device ID** (UUID)
+4. In HAOS Supervisor → Trovalo Configuration, add the ID to `allowed_devices`
+5. Set `allow_new_devices: false` to lock down access
 
-// Instantiate CouchDB routing layer over persistent disk layout
-const PouchWithLevel = PouchDB.defaults({ prefix: `${dbDir}/` });
-app.use('/db', expressPouchDB(PouchWithLevel));
+### iOS storage wipe protection
 
-// Serve production UI assets compiled via Vite
-app.use(express.static('dist'));
+The device ID is stored redundantly in both **localStorage** and **IndexedDB**. If iOS Safari wipes one, the other restores it. A browser fingerprint (UA + language + timezone + screen) serves as a probabilistic fallback. The device also registers with the server on each load.
 
-// Route all fallback operations back to the SPA pipeline
-app.get('*', (req, res) => {
-  res.sendFile(path.resolve('dist/index.html'));
-});
+---
 
-app.listen(8080, () => {
-  console.log('Trovalo host pipeline running on port 8080');
-});
+## Architecture
 
+### Backend (`server.js`)
+
+- **Express** serves the compiled SPA and exposes a CouchDB-compatible sync endpoint at `/db/`
+- **PouchDB** with LevelDB backend persists data in `/data/trovalo_db` (survives container restarts)
+- **Device whitelist middleware** checks `x-device-id` header on all `/db/*` requests
+- **`/api/device/status`** — returns whitelist status for the requesting device
+- **`/api/device/register`** — registers device ID + fingerprint for recovery
+
+### Frontend
+
+- **React 18 + TypeScript** with Vite build
+- **RxDB** (IndexedDB via Dexie) for offline-first local storage
+- **CouchDB replication** syncs data between devices on the same LAN
+- **i18next** with browser language detection (en/it)
+- **Tailwind CSS** for styling
+- **PWA** with auto-updating service worker and Workbox caching
+
+### Container
+
+- `node:20-alpine` base image
+- Multi-stage: install deps → build frontend → serve with Express
+- HAOS Supervisor maps `/data` for persistent storage and `/config` for options
+
+---
+
+## Development
+
+```bash
+cd trovalo
+npm install
+npm run dev      # Vite dev server (frontend only)
+npm run build    # Production build
+node server.js   # Full stack (serves dist/ on port 8080)
 ```
 
 ---
 
-## 3. Core Application Architecture (Frontend)
+## Configuration (HAOS Supervisor)
 
-The frontend must be built as a Progressive Web App (PWA) using Vite + React + TypeScript.
-
-### A. Required Dependencies
-
-For Hermes to initialize the correct environment, ensure these dependencies are installed:
-`npm install react react-dom rxdb dexie pouchdb express express-pouchdb i18next react-i18next i18next-browser-languagedetector`
-`npm install -D vite @vitejs/plugin-react vite-plugin-pwa typescript`
-
-### B. PWA Worker Pipeline (`/trovalo/vite.config.ts`)
-
-```typescript
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { VitePWA } from 'vite-plugin-pwa';
-
-export default defineConfig({
-  plugins: [
-    react(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'], // Note: json included for i18n
-        cleanupOutdatedCaches: true,
-      },
-      manifest: {
-        name: 'Trovalo',
-        short_name: 'Trovalo',
-        description: 'Garage Inventory Manager',
-        theme_color: '#4F46E5',
-        background_color: '#ffffff',
-        display: 'standalone',
-        icons: [
-          { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'icon-512.png', sizes: '512x512', type: 'image/png' }
-        ]
-      }
-    })
-  ]
-});
-
-```
-
-### C. Internationalization (i18n) Setup
-
-To ensure translations work instantly in the garage, the dictionaries are bundled and loaded statically without requesting external CDNs.
-
-#### `/trovalo/src/locales/en.json`
-
-```json
-{
-  "sync": {
-    "ready": "Synced & Ready for Garage",
-    "offline": "Offline Mode Active",
-    "error": "Sync Engine Connection Error"
-  },
-  "ui": {
-    "scan": "Scan Box",
-    "search": "Search Inventory"
-  }
-}
-
-```
-
-#### `/trovalo/src/locales/it.json`
-
-```json
-{
-  "sync": {
-    "ready": "Sincronizzato e Pronto",
-    "offline": "Modalità Offline Attiva",
-    "error": "Errore di Connessione"
-  },
-  "ui": {
-    "scan": "Scansiona Scatola",
-    "search": "Cerca Inventario"
-  }
-}
-
-```
-
-#### `/trovalo/src/i18n.ts`
-
-```typescript
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
-
-import en from './locales/en.json';
-import it from './locales/it.json';
-
-i18n
-  .use(LanguageDetector)
-  .use(initReactI18next)
-  .init({
-    resources: {
-      en: { translation: en },
-      it: { translation: it }
-    },
-    fallbackLng: 'en',
-    interpolation: { escapeValue: false }
-  });
-
-export default i18n;
-
-```
-
-### D. Client Engine Database & Schema (`/trovalo/src/database.ts`)
-
-```typescript
-import { createRxDatabase, addRxPlugin } from 'rxdb';
-import { getRxStorageDexie } from 'rxdb/plugins/storage-dexie';
-import { RxDBReplicationCouchDBPlugin } from 'rxdb/plugins/replication-couchdb';
-
-addRxPlugin(RxDBReplicationCouchDBPlugin);
-
-export const initDb = async () => {
-  const db = await createRxDatabase({
-    name: 'trovalo_client_cache',
-    storage: getRxStorageDexie()
-  });
-
-  await db.addCollections({
-    boxes: {
-      schema: {
-        version: 0,
-        primaryKey: 'id',
-        type: 'object',
-        properties: {
-          id: { type: 'string', maxLength: 100 },
-          zone: { type: 'string' },
-          items: { type: 'array', items: { type: 'string' } },
-          updatedAt: { type: 'number' }
-        },
-        required: ['id', 'zone', 'items']
-      }
-    }
-  });
-
-  const syncState = db.boxes.syncCouchDB({
-    url: `${window.location.origin}/db/boxes`,
-    live: true,
-    pull: {},
-    push: {}
-  });
-
-  return { db, syncState };
-};
-
-```
-
-### E. The "Traffic Light" Sync Banner (`/trovalo/src/components/SyncIndicator.tsx`)
-
-This component incorporates `useTranslation` to ensure the status updates correctly based on the family member's native language.
-
-```tsx
-import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-
-interface SyncIndicatorProps {
-  syncState: any;
-}
-
-export const SyncIndicator: React.FC<SyncIndicatorProps> = ({ syncState }) => {
-  const { t } = useTranslation();
-  const [status, setStatus] = useState<'green' | 'yellow' | 'red'>('yellow');
-
-  useEffect(() => {
-    if (!syncState) return;
-
-    const subActive = syncState.active$.subscribe((active: boolean) => {
-      if (active && navigator.onLine) setStatus('green');
-    });
-
-    const subError = syncState.error$.subscribe((err: any) => {
-      if (err) setStatus('red');
-    });
-
-    const handleOffline = () => setStatus('yellow');
-    const handleOnline = () => setStatus('green');
-
-    window.addEventListener('offline', handleOffline);
-    window.addEventListener('online', handleOnline);
-
-    setStatus(navigator.onLine ? 'green' : 'yellow');
-
-    return () => {
-      subActive.unsubscribe();
-      subError.unsubscribe();
-      window.removeEventListener('offline', handleOffline);
-      window.removeEventListener('online', handleOnline);
-    };
-  }, [syncState]);
-
-  const configuration = {
-    green: { color: 'bg-green-500', text: t('sync.ready') },
-    yellow: { color: 'bg-yellow-500', text: t('sync.offline') },
-    red: { color: 'bg-red-500', text: t('sync.error') }
-  };
-
-  return (
-    <div className="flex items-center justify-center p-4 w-full bg-white border-b shadow-sm">
-      <div className={`w-4 h-4 rounded-full animate-pulse ${configuration[status].color}`} />
-      <span className="ml-3 font-medium text-gray-700 tracking-wide text-sm md:text-base">
-        {configuration[status].text}
-      </span>
-    </div>
-  );
-};
-
-```
+| Option              | Type       | Default | Description                      |
+| ------------------- | ---------- | ------- | -------------------------------- |
+| `allowed_devices`   | `string[]` | `[]`    | List of authorized device UUIDs  |
+| `allow_new_devices` | `boolean`  | `true`  | Allow unknown devices to connect |
 
 ---
 
-## 4. Feature Requirements & Workflows
+## Tech Stack
 
-* **Zero Garage Connectivity Constraints:** The application **must not** rely on real-time network requests to read or write data. All updates take place against the localized RxDB database.
-* **QR Code & Box Identification:** The QR codes printed onto physical storage boxes must hold simple, immutable uniquely identifiable anchors (e.g., UUID strings like `box-8f73b2`). They **must not** contain item lists or text arrays, preventing labels from expiring when box contents change.
-* **Interactive Scanning Workflow:** Implement an HTML5 Web Camera wrapper system using an accessible dependency like `html5-qrcode`. It must capture code matrix streams gracefully and handle iOS Safari permission flows smoothly.
-* If a scanned anchor is found in the local cache, load the modification route.
-* If missing, transition immediately into a creation workflow to assign it a physical location zone and define item contents.
-
-
-* **Storage Topography:** Boxes must map to structured textual zones or physical shelves (e.g., `Zone A`, `Shelf 2`, `Rack B`) instead of absolute X/Y coordinate visual maps.
+| Layer    | Technology                                   |
+| -------- | -------------------------------------------- |
+| Runtime  | Node.js 20 (Alpine)                          |
+| Backend  | Express, PouchDB, express-pouchdb            |
+| Frontend | React 18, TypeScript, Vite                   |
+| Database | RxDB (IndexedDB/Dexie) + CouchDB replication |
+| Styling  | Tailwind CSS                                 |
+| PWA      | vite-plugin-pwa, Workbox                     |
+| i18n     | i18next, react-i18next                       |
+| QR       | qrcode library                               |
+| Scanner  | html5-qrcode                                 |
