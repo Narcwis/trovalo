@@ -10,6 +10,11 @@ interface SearchInventoryProps {
   selectedGroupId: string;
 }
 
+function boxNumber(id: string): string {
+  const m = id.match(/-(\d+)$/);
+  return m ? m[1] : id;
+}
+
 export const SearchInventory: React.FC<SearchInventoryProps> = ({
   cache,
   selectedGroupId,
@@ -107,9 +112,12 @@ export const SearchInventory: React.FC<SearchInventoryProps> = ({
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-3">
             <div>
               <span className="text-xs text-gray-400 uppercase tracking-wide">
-                {t("search.box_id")}
+                {t("search.box_number")}
               </span>
-              <p className="font-mono text-sm text-gray-900 break-all mt-0.5">
+              <p className="text-2xl font-bold text-gray-900 mt-0.5">
+                #{boxNumber(selectedBox.id)}
+              </p>
+              <p className="text-xs text-gray-400 font-mono mt-1 break-all">
                 {selectedBox.id}
               </p>
             </div>
@@ -187,8 +195,8 @@ export const SearchInventory: React.FC<SearchInventoryProps> = ({
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <p className="text-sm font-mono text-gray-900 truncate">
-                      {box.id}
+                    <p className="text-base font-bold text-gray-900">
+                      #{boxNumber(box.id)}
                     </p>
                     <p className="text-xs text-gray-500 mt-0.5">
                       {box.side} &middot; {t("search.level")} {box.level}

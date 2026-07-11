@@ -59,7 +59,7 @@ export const QRCodeGenerator: React.FC = () => {
       const batch = Math.min(batchSize, count - i);
       const promises = Array.from({ length: batch }, async (_, j) => {
         const boxNumber = startNumber + i + j;
-        const id = `qr-${batchId}-${boxNumber}`;
+        const id = `trovalo-${batchId}-${boxNumber}`;
         try {
           const dataUrl = await generateWithOverlay(id, boxNumber, width);
           return { id, boxNumber, dataUrl };
