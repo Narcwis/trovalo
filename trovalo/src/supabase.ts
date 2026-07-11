@@ -19,4 +19,32 @@ export interface Box {
   zone: string;
   items: string[];
   updated_at: number;
+  owner_id?: string;
+  group_id?: string;
+}
+
+export interface Group {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
+export interface GroupMember {
+  id: string;
+  group_id: string;
+  email: string;
+  role: "admin" | "member";
+  created_at: string;
+}
+
+export function signInWithGoogle() {
+  const redirectTo = `${window.location.origin}${import.meta.env.BASE_URL}`;
+  return supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo },
+  });
+}
+
+export function signOut() {
+  return supabase.auth.signOut();
 }

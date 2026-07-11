@@ -5,13 +5,26 @@
     "offline": "Modalità Offline Attiva",
     "error": "Errore di Connessione al Database"
   },
+  "auth": {
+    "tagline": "Gestore Inventario Garages",
+    "sign_in_google": "Accedi con Google",
+    "privacy_note": "Solo le persone con accesso al tuo progetto Supabase possono accedere.",
+    "sign_out": "Esci",
+    "account_info": "Informazioni Account",
+    "email": "Email",
+    "name": "Nome",
+    "role": "Ruolo",
+    "admin_role": "Amministratore",
+    "member_role": "Membro"
+  },
   "ui": {
     "scan": "Scansiona Scatola",
     "search": "Cerca Inventario"
   },
   "nav": {
     "back_to_home": "Torna alla Home",
-    "generate_qr": "Genera Codici QR"
+    "generate_qr": "Genera Codici QR",
+    "admin": "Admin"
   },
   "qr": {
     "title": "Generatore di Codici QR",
@@ -25,9 +38,18 @@
     "back": "Torna alle impostazioni",
     "generated_count": "Generati"
   },
-  "device": {
-    "device_info": "Informazioni Dispositivo",
-    "id": "ID Dispositivo",
-    "storage_hint": "L'ID del dispositivo è memorizzato in modo ridondante (localStorage + IndexedDB) per resistere alla cancellazione di iOS."
+  "admin": {
+    "title": "Pannello di Amministrazione",
+    "description": "Gestisci gruppi e membri.",
+    "create_group": "Crea Gruppo",
+    "group_name_placeholder": "Nome gruppo",
+    "create": "Crea",
+    "delete_group": "Elimina gruppo",
+    "no_groups": "Nessun gruppo. Creane uno sopra.",
+    "no_members": "Nessun membro in questo gruppo.",
+    "add_member_placeholder": "utente@email.com",
+    "add": "Aggiungi",
+    "remove": "Rimuovi",
+    "admin_role": "Admin"
   }
 }

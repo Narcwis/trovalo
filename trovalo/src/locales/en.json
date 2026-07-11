@@ -5,13 +5,26 @@
     "offline": "Offline Mode Active",
     "error": "Database Connection Error"
   },
+  "auth": {
+    "tagline": "Garage Inventory Manager",
+    "sign_in_google": "Sign in with Google",
+    "privacy_note": "Only people with access to your Supabase project can sign in.",
+    "sign_out": "Sign out",
+    "account_info": "Account Information",
+    "email": "Email",
+    "name": "Name",
+    "role": "Role",
+    "admin_role": "Administrator",
+    "member_role": "Member"
+  },
   "ui": {
     "scan": "Scan Box",
     "search": "Search Inventory"
   },
   "nav": {
     "back_to_home": "Back to Home",
-    "generate_qr": "Generate QR Codes"
+    "generate_qr": "Generate QR Codes",
+    "admin": "Admin"
   },
   "qr": {
     "title": "QR Code Generator",
@@ -25,9 +38,18 @@
     "back": "Back to settings",
     "generated_count": "Generated"
   },
-  "device": {
-    "device_info": "Device Information",
-    "id": "Device ID",
-    "storage_hint": "Device ID is stored redundantly (localStorage + IndexedDB) to survive iOS storage wipes."
+  "admin": {
+    "title": "Admin Console",
+    "description": "Manage groups and their members.",
+    "create_group": "Create Group",
+    "group_name_placeholder": "Group name",
+    "create": "Create",
+    "delete_group": "Delete group",
+    "no_groups": "No groups yet. Create one above.",
+    "no_members": "No members in this group.",
+    "add_member_placeholder": "user@email.com",
+    "add": "Add",
+    "remove": "Remove",
+    "admin_role": "Admin"
   }
 }

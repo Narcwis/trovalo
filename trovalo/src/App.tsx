@@ -1,41 +1,100 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { User } from "@supabase/supabase-js";
 import { SyncIndicator } from "./components/SyncIndicator";
 import { QRCodeGenerator } from "./components/QRCodeGenerator";
+import { LoginPage } from "./components/LoginPage";
+import { AdminConsole } from "./components/AdminConsole";
 import { initDb, onSyncStatus, type SyncStatus } from "./database";
-import { getDeviceId } from "./device";
+import { supabase } from "./supabase";
 
-type View = "main" | "qr-generator";
+type View = "main" | "qr-generator" | "admin";
 
 const App: React.FC = () => {
   const { t } = useTranslation();
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("connecting");
   const [dbReady, setDbReady] = useState(false);
-  const [deviceId, setDeviceId] = useState<string>("");
   const [view, setView] = useState<View>("main");
 
   useEffect(() => {
-    const unsub = onSyncStatus(setSyncStatus);
-    initDb().then(() => setDbReady(true));
-    return unsub;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null);
+      },
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
-    getDeviceId().then(setDeviceId);
-  }, []);
+    if (!user) return;
+    const unsub = onSyncStatus(setSyncStatus);
+    initDb().then(() => setDbReady(true));
+    return unsub;
+  }, [user]);
+
+  const isAdmin = user?.email === import.meta.env.VITE_ADMIN_EMAIL;
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginPage />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
-        <SyncIndicator status={syncStatus} />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">Trovalo</h1>
-          <p className="mt-1 text-sm text-gray-500">Garage Inventory Manager</p>
-        </div>
+        <SyncIndicator
+          status={syncStatus}
+          user={user}
+          onNavigateAdmin={isAdmin ? () => setView("admin") : undefined}
+        />
+        {view !== "admin" && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <h1 className="text-2xl font-bold text-gray-900">Trovalo</h1>
+            <p className="mt-1 text-sm text-gray-500">Garage Inventory Manager</p>
+          </div>
+        )}
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {view === "qr-generator" ? (
+        {view === "admin" ? (
+          <div>
+            <button
+              onClick={() => setView("main")}
+              className="mb-4 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-1"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+              {t("nav.back_to_home")}
+            </button>
+            <AdminConsole />
+          </div>
+        ) : view === "qr-generator" ? (
           <div>
             <button
               onClick={() => setView("main")}
@@ -134,19 +193,32 @@ const App: React.FC = () => {
             <div className="mt-8 pt-4 border-t border-gray-200">
               <details className="group">
                 <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-600 select-none">
-                  {t("device.device_info")}
+                  {t("auth.account_info")}
                 </summary>
                 <div className="mt-2 p-3 bg-gray-100 rounded-md space-y-1">
                   <p className="text-xs text-gray-500">
                     <span className="font-medium text-gray-700">
-                      {t("device.id")}:
+                      {t("auth.email")}:
                     </span>{" "}
-                    <code className="ml-1 font-mono text-gray-800 break-all">
-                      {deviceId}
+                    <code className="ml-1 font-mono text-gray-800">
+                      {user.email}
                     </code>
                   </p>
-                  <p className="pt-1 text-xs text-gray-400 italic">
-                    {t("device.storage_hint")}
+                  <p className="text-xs text-gray-500">
+                    <span className="font-medium text-gray-700">
+                      {t("auth.name")}:
+                    </span>{" "}
+                    <span className="ml-1 text-gray-800">
+                      {user.user_metadata?.full_name || "-"}
+                    </span>
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    <span className="font-medium text-gray-700">
+                      {t("auth.role")}:
+                    </span>{" "}
+                    <span className="ml-1 text-gray-800">
+                      {isAdmin ? t("auth.admin_role") : t("auth.member_role")}
+                    </span>
                   </p>
                 </div>
               </details>
