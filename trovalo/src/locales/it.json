@@ -36,7 +36,9 @@
     "saving": "Salvataggio...",
     "cancel": "Annulla",
     "saved_title": "Scatola Salvata!",
-    "scan_another": "Scansiona Altro"
+    "scan_another": "Scansiona Altro",
+    "in_bin": "Questa scatola è nel Cestino. Ripristina per modificarla.",
+    "restore": "Ripristina"
   },
   "ui": {
     "scan": "Scansiona Scatola",
@@ -45,11 +47,33 @@
   "nav": {
     "back_to_home": "Torna alla Home",
     "generate_qr": "Genera Codici QR",
-    "admin": "Admin"
+    "admin": "Admin",
+    "bin": "Cestino",
+    "all_groups": "Tutti i Gruppi"
+  },
+  "search": {
+    "title": "Cerca Inventario",
+    "description": "Trova scatole per lato, livello, contenuti o ID.",
+    "placeholder": "Cerca scatole...",
+    "no_results": "Nessuna scatola corrisponde alla ricerca.",
+    "back_to_results": "Torna ai risultati",
+    "box_id": "ID Scatola",
+    "side": "Lato",
+    "level": "Livello",
+    "contents": "Contenuto",
+    "empty": "Vuoto",
+    "item_count": "oggetto",
+    "item_count_plural": "oggetti",
+    "move_to_bin": "Sposta nel Cestino",
+    "in_bin": "Questa scatola è nel Cestino."
   },
   "qr": {
     "title": "Generatore di Codici QR",
     "number_of_codes": "Numero di codici QR",
+    "start_number": "Numero iniziale",
+    "start_number_hint": "Scegli un numero per continuare da un lotto precedente",
+    "numbering_from": "Numerazione da",
+    "to": "a",
     "size_cm": "Dimensione QR (cm)",
     "min_size": "Minimo 5 cm",
     "preview": "Anteprima",
@@ -58,6 +82,15 @@
     "generating": "Generazione in corso...",
     "back": "Torna alle impostazioni",
     "generated_count": "Generati"
+  },
+  "bin": {
+    "title": "Cestino",
+    "description": "Le scatole nel cestino verranno eliminate definitivamente dopo 30 giorni.",
+    "empty": "Il cestino è vuoto.",
+    "level": "Livello",
+    "deleted": "Eliminata:",
+    "restore": "Ripristina",
+    "delete_forever": "Elimina Definitivamente"
   },
   "admin": {
     "title": "Pannello di Amministrazione",

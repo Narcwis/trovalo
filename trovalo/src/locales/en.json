@@ -36,7 +36,9 @@
     "saving": "Saving...",
     "cancel": "Cancel",
     "saved_title": "Box Saved!",
-    "scan_another": "Scan Another"
+    "scan_another": "Scan Another",
+    "in_bin": "This box is in the Bin. Restore to edit it.",
+    "restore": "Restore"
   },
   "ui": {
     "scan": "Scan Box",
@@ -45,11 +47,33 @@
   "nav": {
     "back_to_home": "Back to Home",
     "generate_qr": "Generate QR Codes",
-    "admin": "Admin"
+    "admin": "Admin",
+    "bin": "Bin",
+    "all_groups": "All Groups"
+  },
+  "search": {
+    "title": "Search Inventory",
+    "description": "Find boxes by side, level, contents, or box ID.",
+    "placeholder": "Search boxes...",
+    "no_results": "No boxes match your search.",
+    "back_to_results": "Back to results",
+    "box_id": "Box ID",
+    "side": "Side",
+    "level": "Level",
+    "contents": "Contents",
+    "empty": "Empty",
+    "item_count": "item",
+    "item_count_plural": "items",
+    "move_to_bin": "Move to Bin",
+    "in_bin": "This box is in the Bin."
   },
   "qr": {
     "title": "QR Code Generator",
     "number_of_codes": "Number of QR codes",
+    "start_number": "Starting number",
+    "start_number_hint": "Pick a number to continue from a previous batch",
+    "numbering_from": "Numbering from",
+    "to": "to",
     "size_cm": "QR size (cm)",
     "min_size": "Minimum 5 cm",
     "preview": "Preview",
@@ -58,6 +82,15 @@
     "generating": "Generating...",
     "back": "Back to settings",
     "generated_count": "Generated"
+  },
+  "bin": {
+    "title": "Bin",
+    "description": "Boxes moved to the bin will be permanently deleted after 30 days.",
+    "empty": "The bin is empty.",
+    "level": "Level",
+    "deleted": "Deleted:",
+    "restore": "Restore",
+    "delete_forever": "Delete Forever"
   },
   "admin": {
     "title": "Admin Console",

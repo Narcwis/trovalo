@@ -20,6 +20,7 @@ export interface Box {
   level: string;
   items: string[];
   updated_at: number;
+  deleted_at?: string | null;
   owner_id?: string;
   group_id?: string;
 }

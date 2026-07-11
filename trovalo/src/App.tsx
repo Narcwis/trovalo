@@ -4,13 +4,20 @@ import type { User } from "@supabase/supabase-js";
 import { SyncIndicator } from "./components/SyncIndicator";
 import { QRCodeGenerator } from "./components/QRCodeGenerator";
 import { QRScanner } from "./components/QRScanner";
+import { SearchInventory } from "./components/SearchInventory";
+import { Bin } from "./components/Bin";
 import { LoginPage } from "./components/LoginPage";
 import { AdminConsole } from "./components/AdminConsole";
-import { initDb, onSyncStatus, type SyncStatus } from "./database";
+import { initDb, onSyncStatus, cache, type SyncStatus } from "./database";
 import { supabase } from "./supabase";
 import { APP_VERSION, checkForUpdate } from "./version";
 
-type View = "main" | "qr-generator" | "admin" | "scanner";
+type View = "main" | "qr-generator" | "admin" | "scanner" | "search" | "bin";
+
+interface UserGroup {
+  id: string;
+  name: string;
+}
 
 const App: React.FC = () => {
   const { t } = useTranslation();
@@ -20,6 +27,8 @@ const App: React.FC = () => {
   const [dbReady, setDbReady] = useState(false);
   const [view, setView] = useState<View>("main");
   const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [groups, setGroups] = useState<UserGroup[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -48,6 +57,36 @@ const App: React.FC = () => {
     checkForUpdate().then(setUpdateAvailable);
   }, [user]);
 
+  useEffect(() => {
+    if (!user || !dbReady) return;
+    const email = user.email!;
+    const isAdmin = email === import.meta.env.VITE_ADMIN_EMAIL;
+
+    (async () => {
+      if (isAdmin) {
+        const { data } = await supabase
+          .from("groups")
+          .select("id, name")
+          .order("name");
+        if (data) setGroups(data);
+      } else {
+        const { data: memberships } = await supabase
+          .from("group_members")
+          .select("group_id")
+          .eq("email", email);
+        if (memberships && memberships.length > 0) {
+          const ids = memberships.map((r) => r.group_id);
+          const { data: gData } = await supabase
+            .from("groups")
+            .select("id, name")
+            .in("id", ids)
+            .order("name");
+          if (gData) setGroups(gData);
+        }
+      }
+    })();
+  }, [user, dbReady]);
+
   const isAdmin = user?.email === import.meta.env.VITE_ADMIN_EMAIL;
 
   if (authLoading) {
@@ -71,7 +110,7 @@ const App: React.FC = () => {
           onNavigateAdmin={isAdmin ? () => setView("admin") : undefined}
         />
         {view !== "admin" && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-2">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-gray-900">Trovalo</h1>
               {APP_VERSION && (
@@ -80,7 +119,23 @@ const App: React.FC = () => {
                 </span>
               )}
             </div>
-            <p className="mt-1 text-sm text-gray-500">Garage Inventory Manager</p>
+            <p className="text-sm text-gray-500">Garage Inventory Manager</p>
+            {groups.length > 0 && (
+              <div className="flex items-center gap-2">
+                <select
+                  value={selectedGroupId}
+                  onChange={(e) => setSelectedGroupId(e.target.value)}
+                  className="px-2 py-1 border border-gray-300 rounded text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">{t("nav.all_groups")}</option>
+                  {groups.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         )}
         {updateAvailable && (
@@ -123,7 +178,56 @@ const App: React.FC = () => {
             <AdminConsole />
           </div>
         ) : view === "scanner" ? (
-          <QRScanner onBack={() => setView("main")} />
+          <QRScanner
+            onBack={() => setView("main")}
+            selectedGroupId={selectedGroupId}
+          />
+        ) : view === "search" ? (
+          <div>
+            <button
+              onClick={() => setView("main")}
+              className="mb-4 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-1"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+              {t("nav.back_to_home")}
+            </button>
+            <SearchInventory cache={cache} selectedGroupId={selectedGroupId} />
+          </div>
+        ) : view === "bin" ? (
+          <div>
+            <button
+              onClick={() => setView("main")}
+              className="mb-4 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-1"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+              {t("nav.back_to_home")}
+            </button>
+            <Bin selectedGroupId={selectedGroupId} />
+          </div>
         ) : view === "qr-generator" ? (
           <div>
             <button
@@ -177,7 +281,10 @@ const App: React.FC = () => {
                 </div>
               </button>
 
-              <button className="flex items-center justify-center p-8 bg-white rounded-lg shadow-sm border-2 border-transparent hover:border-indigo-500 transition-all duration-200">
+              <button
+                onClick={() => setView("search")}
+                className="flex items-center justify-center p-8 bg-white rounded-lg shadow-sm border-2 border-transparent hover:border-indigo-500 transition-all duration-200"
+              >
                 <div className="text-center">
                   <svg
                     className="mx-auto h-12 w-12 text-indigo-500"
@@ -223,7 +330,15 @@ const App: React.FC = () => {
               </button>
             </div>
 
-            <div className="mt-8 pt-4 border-t border-gray-200">
+            <div className="mt-8 pt-4 border-t border-gray-200 space-y-2">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setView("bin")}
+                  className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {t("nav.bin")}
+                </button>
+              </div>
               <details className="group">
                 <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-600 select-none">
                   {t("auth.account_info")}

@@ -5,6 +5,7 @@ import { supabase, type Box } from "../supabase";
 
 interface QRScannerProps {
   onBack: () => void;
+  selectedGroupId: string;
 }
 
 type Phase = "scanning" | "loaded" | "saving" | "saved";
@@ -92,7 +93,10 @@ function Combobox({
   );
 }
 
-export const QRScanner: React.FC<QRScannerProps> = ({ onBack }) => {
+export const QRScanner: React.FC<QRScannerProps> = ({
+  onBack,
+  selectedGroupId,
+}) => {
   const { t } = useTranslation();
   const [phase, setPhase] = useState<Phase>("scanning");
   const [boxId, setBoxId] = useState<string>("");
@@ -101,6 +105,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onBack }) => {
   const [items, setItems] = useState<string[]>([]);
   const [itemInput, setItemInput] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [deletedBox, setDeletedBox] = useState(false);
 
   const existingSides = useDistinctValues("side");
   const existingLevels = useDistinctValues("level");
@@ -122,10 +127,12 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onBack }) => {
           setSide(box.side);
           setLevel(box.level);
           setItems(box.items);
+          setDeletedBox(box.deleted_at != null);
         } else {
           setSide("");
           setLevel("");
           setItems([]);
+          setDeletedBox(false);
         }
         setPhase("loaded");
       });
@@ -166,6 +173,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onBack }) => {
         side: side.trim(),
         level: level.trim(),
         items,
+        group_id: selectedGroupId || undefined,
         updated_at: Date.now(),
       },
       { onConflict: "id" },
@@ -178,6 +186,14 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onBack }) => {
     setPhase("saved");
   };
 
+  const handleRestore = async () => {
+    await supabase
+      .from("boxes")
+      .update({ deleted_at: null })
+      .eq("id", boxId);
+    setDeletedBox(false);
+  };
+
   const reset = () => {
     setPhase("scanning");
     setBoxId("");
@@ -186,6 +202,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onBack }) => {
     setItems([]);
     setItemInput("");
     setError(null);
+    setDeletedBox(false);
   };
 
   if (phase === "scanning") {
@@ -326,92 +343,104 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onBack }) => {
         </div>
       )}
 
-      <div className="max-w-md mx-auto space-y-4">
-        <Combobox
-          label={t("scan.side_label")}
-          placeholder={t("scan.side_placeholder")}
-          value={side}
-          onChange={setSide}
-          options={existingSides}
-        />
+      {deletedBox ? (
+        <div className="max-w-md mx-auto bg-amber-50 border border-amber-200 rounded-lg p-6 text-center">
+          <p className="text-sm text-amber-800 mb-4">{t("scan.in_bin")}</p>
+          <button
+            onClick={handleRestore}
+            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            {t("scan.restore")}
+          </button>
+        </div>
+      ) : (
+        <div className="max-w-md mx-auto space-y-4">
+          <Combobox
+            label={t("scan.side_label")}
+            placeholder={t("scan.side_placeholder")}
+            value={side}
+            onChange={setSide}
+            options={existingSides}
+          />
 
-        <Combobox
-          label={t("scan.level_label")}
-          placeholder={t("scan.level_placeholder")}
-          value={level}
-          onChange={setLevel}
-          options={existingLevels}
-        />
+          <Combobox
+            label={t("scan.level_label")}
+            placeholder={t("scan.level_placeholder")}
+            value={level}
+            onChange={setLevel}
+            options={existingLevels}
+          />
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t("scan.items_label")}
-          </label>
-          <div className="flex gap-2 mb-2">
-            <input
-              type="text"
-              value={itemInput}
-              onChange={(e) => setItemInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && addItem()}
-              placeholder={t("scan.item_placeholder")}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t("scan.items_label")}
+            </label>
+            <div className="flex gap-2 mb-2">
+              <input
+                type="text"
+                value={itemInput}
+                onChange={(e) => setItemInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addItem()}
+                placeholder={t("scan.item_placeholder")}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <button
+                onClick={addItem}
+                disabled={!itemInput.trim()}
+                className="px-3 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 disabled:opacity-50 transition-colors"
+              >
+                {t("scan.add_item")}
+              </button>
+            </div>
+            {items.length > 0 && (
+              <ul className="space-y-1">
+                {items.map((item, i) => (
+                  <li
+                    key={i}
+                    className="flex items-center justify-between px-3 py-1.5 bg-gray-50 rounded text-sm"
+                  >
+                    <span className="text-gray-700">{item}</span>
+                    <button
+                      onClick={() => removeItem(i)}
+                      className="text-gray-400 hover:text-red-500 transition-colors"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="flex gap-3 pt-2">
             <button
-              onClick={addItem}
-              disabled={!itemInput.trim()}
-              className="px-3 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 disabled:opacity-50 transition-colors"
+              onClick={reset}
+              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
             >
-              {t("scan.add_item")}
+              {t("scan.cancel")}
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={!side.trim() || !level.trim() || phase === "saving"}
+              className="flex-1 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+            >
+              {phase === "saving" ? t("scan.saving") : t("scan.save")}
             </button>
           </div>
-          {items.length > 0 && (
-            <ul className="space-y-1">
-              {items.map((item, i) => (
-                <li
-                  key={i}
-                  className="flex items-center justify-between px-3 py-1.5 bg-gray-50 rounded text-sm"
-                >
-                  <span className="text-gray-700">{item}</span>
-                  <button
-                    onClick={() => removeItem(i)}
-                    className="text-gray-400 hover:text-red-500 transition-colors"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
         </div>
-
-        <div className="flex gap-3 pt-2">
-          <button
-            onClick={reset}
-            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            {t("scan.cancel")}
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={!side.trim() || !level.trim() || phase === "saving"}
-            className="flex-1 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-          >
-            {phase === "saving" ? t("scan.saving") : t("scan.save")}
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

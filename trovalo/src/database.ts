@@ -6,13 +6,13 @@ class TrovaloCache extends Dexie {
 
   constructor() {
     super("trovalo_cache");
-    this.version(2).stores({
-      boxes: "id, side, level, updated_at",
+    this.version(3).stores({
+      boxes: "id, side, level, updated_at, deleted_at",
     });
   }
 }
 
-const cache = new TrovaloCache();
+export const cache = new TrovaloCache();
 
 export type SyncStatus = "connecting" | "synced" | "offline" | "error";
 
@@ -103,7 +103,24 @@ export async function initDb() {
       if (error) throw error;
       await cache.boxes.put(box);
     },
-    deleteBox: async (id: string) => {
+    softDeleteBox: async (id: string) => {
+      const now = new Date().toISOString();
+      const { error } = await supabase
+        .from("boxes")
+        .update({ deleted_at: now })
+        .eq("id", id);
+      if (error) throw error;
+      await cache.boxes.update(id, { deleted_at: now });
+    },
+    restoreBox: async (id: string) => {
+      const { error } = await supabase
+        .from("boxes")
+        .update({ deleted_at: null })
+        .eq("id", id);
+      if (error) throw error;
+      await cache.boxes.update(id, { deleted_at: null });
+    },
+    hardDeleteBox: async (id: string) => {
       const { error } = await supabase.from("boxes").delete().eq("id", id);
       if (error) throw error;
       await cache.boxes.delete(id);

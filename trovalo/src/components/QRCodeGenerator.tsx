@@ -39,6 +39,7 @@ async function generateWithOverlay(
 export const QRCodeGenerator: React.FC = () => {
   const { t } = useTranslation();
   const [count, setCount] = useState(10);
+  const [startNumber, setStartNumber] = useState(1);
   const [qrSizeCm, setQrSizeCm] = useState(5);
   const [codes, setCodes] = useState<
     { id: string; boxNumber: number; dataUrl: string }[] | null
@@ -57,7 +58,7 @@ export const QRCodeGenerator: React.FC = () => {
     for (let i = 0; i < count; i += batchSize) {
       const batch = Math.min(batchSize, count - i);
       const promises = Array.from({ length: batch }, async (_, j) => {
-        const boxNumber = i + j + 1;
+        const boxNumber = startNumber + i + j;
         const id = `qr-${batchId}-${boxNumber}`;
         try {
           const dataUrl = await generateWithOverlay(id, boxNumber, width);
@@ -73,7 +74,7 @@ export const QRCodeGenerator: React.FC = () => {
 
     setCodes(allCodes);
     setGenerating(false);
-  }, [count, qrSizeCm]);
+  }, [count, startNumber, qrSizeCm]);
 
   return (
     <div>
@@ -102,6 +103,29 @@ export const QRCodeGenerator: React.FC = () => {
               />
               <p className="mt-1 text-xs text-gray-500">
                 {MIN_COUNT}–{MAX_COUNT}
+              </p>
+            </div>
+
+            <div>
+              <label
+                htmlFor="qr-start"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                {t("qr.start_number")}
+              </label>
+              <input
+                id="qr-start"
+                type="number"
+                min={1}
+                value={startNumber}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  if (!isNaN(v)) setStartNumber(Math.max(1, v));
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                {t("qr.start_number_hint")}
               </p>
             </div>
 
@@ -147,6 +171,10 @@ export const QRCodeGenerator: React.FC = () => {
                   const pages = Math.ceil(count / perPage);
                   return `${cols}×${rows} per page, ${pages} page${pages > 1 ? "s" : ""}`;
                 })()}
+              </p>
+              <p className="mt-1 text-gray-400">
+                {t("qr.numbering_from")} {startNumber}{" "}
+                {t("qr.to")} {startNumber + count - 1}
               </p>
             </div>
 
