@@ -33,7 +33,7 @@ jobs:
           cache: npm
           cache-dependency-path: trovalo/package-lock.json
 
-      - run: npm ci
+      - run: npm install
 
       - run: npm test
 
