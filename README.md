@@ -1,7 +1,3 @@
-Here is a comprehensive, production-ready development specification file. You can save this as `SPECIFICATION.md` or `README.md` and drop it directly into your local Home Assistant add-on repository directory. It contains all architectural details, configuration structures, constraints, and complete code snippets necessary for an LLM agent or developer to build **Trovalo** from scratch.
-
----
-
 # # Development Specification: Trovalo
 
 `Trovalo` is an offline-first, local-syncing garage inventory management application built explicitly to run as a **Home Assistant OS (HAOS) Local Add-on**. It targets an environment completely devoid of internet, Wi-Fi, or cellular connectivity (the garage), allowing multiple family members using different platforms (Android and iOS) to audit and trace physical boxes seamlessly.
