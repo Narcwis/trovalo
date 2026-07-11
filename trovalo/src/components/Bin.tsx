@@ -5,9 +5,10 @@ import { cache } from "../database";
 
 interface BinProps {
   selectedGroupId: string;
+  onBack: () => void;
 }
 
-export const Bin: React.FC<BinProps> = ({ selectedGroupId }) => {
+export const Bin: React.FC<BinProps> = ({ selectedGroupId, onBack }) => {
   const { t } = useTranslation();
   const [boxes, setBoxes] = useState<Box[]>([]);
 
@@ -47,6 +48,15 @@ export const Bin: React.FC<BinProps> = ({ selectedGroupId }) => {
 
   return (
     <div>
+      <button
+        onClick={onBack}
+        className="mb-4 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 hover:border-gray-400 transition-colors flex items-center gap-2"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+        {t("nav.back_to_home")}
+      </button>
       <h2 className="text-xl font-semibold text-gray-900 mb-1">
         {t("bin.title")}
       </h2>
@@ -81,13 +91,13 @@ export const Bin: React.FC<BinProps> = ({ selectedGroupId }) => {
                 <div className="flex gap-2 shrink-0">
                   <button
                     onClick={() => handleRestore(box.id)}
-                    className="px-3 py-1 text-xs font-medium text-green-700 bg-green-50 rounded hover:bg-green-100 transition-colors"
+                    className="px-4 py-2 text-xs font-medium text-green-700 bg-green-50 rounded hover:bg-green-100 transition-colors"
                   >
                     {t("bin.restore")}
                   </button>
                   <button
                     onClick={() => handleHardDelete(box.id)}
-                    className="px-3 py-1 text-xs font-medium text-red-700 bg-red-50 rounded hover:bg-red-100 transition-colors"
+                    className="px-4 py-2 text-xs font-medium text-red-700 bg-red-50 rounded hover:bg-red-100 transition-colors"
                   >
                     {t("bin.delete_forever")}
                   </button>

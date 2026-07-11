@@ -2,7 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase, type Group, type GroupMember } from "../supabase";
 
-export const AdminConsole: React.FC = () => {
+interface AdminConsoleProps {
+  onBack: () => void;
+}
+
+export const AdminConsole: React.FC<AdminConsoleProps> = ({ onBack }) => {
   const { t } = useTranslation();
   const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
@@ -72,6 +76,15 @@ export const AdminConsole: React.FC = () => {
 
   return (
     <div>
+      <button
+        onClick={onBack}
+        className="mb-4 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 hover:border-gray-400 transition-colors flex items-center gap-2"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+        {t("nav.back_to_home")}
+      </button>
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-900">
           {t("admin.title")}
@@ -90,12 +103,12 @@ export const AdminConsole: React.FC = () => {
             onChange={(e) => setNewGroupName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleCreateGroup()}
             placeholder={t("admin.group_name_placeholder")}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
           <button
             onClick={handleCreateGroup}
             disabled={!newGroupName.trim()}
-            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {t("admin.create")}
           </button>
@@ -169,7 +182,7 @@ export const AdminConsole: React.FC = () => {
                     {members.map((m) => (
                       <div
                         key={m.id}
-                        className="flex items-center justify-between py-1"
+                        className="flex items-center justify-between py-2.5"
                       >
                         <span className="text-sm text-gray-700">
                           {m.email}
@@ -201,12 +214,12 @@ export const AdminConsole: React.FC = () => {
                       e.key === "Enter" && handleAddMember()
                     }
                     placeholder={t("admin.add_member_placeholder")}
-                    className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="flex-1 px-4 py-2.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                   <button
                     onClick={handleAddMember}
                     disabled={!newMemberEmail.trim()}
-                    className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {t("admin.add")}
                   </button>

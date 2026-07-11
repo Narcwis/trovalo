@@ -41,7 +41,7 @@ export const SyncIndicator: React.FC<SyncIndicatorProps> = ({
           {isAdmin && onNavigateAdmin && (
             <button
               onClick={onNavigateAdmin}
-              className="text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+              className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
             >
               {t("nav.admin")}
             </button>

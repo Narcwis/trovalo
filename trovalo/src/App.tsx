@@ -125,7 +125,7 @@ const App: React.FC = () => {
                 <select
                   value={selectedGroupId}
                   onChange={(e) => setSelectedGroupId(e.target.value)}
-                  className="px-2 py-1 border border-gray-300 rounded text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   <option value="">{t("nav.all_groups")}</option>
                   {groups.map((g) => (
@@ -155,105 +155,25 @@ const App: React.FC = () => {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {view === "admin" ? (
-          <div>
-            <button
-              onClick={() => setView("main")}
-              className="mb-4 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-1"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              {t("nav.back_to_home")}
-            </button>
-            <AdminConsole />
-          </div>
+          <AdminConsole onBack={() => setView("main")} />
         ) : view === "scanner" ? (
           <QRScanner
             onBack={() => setView("main")}
             selectedGroupId={selectedGroupId}
           />
         ) : view === "search" ? (
-          <div>
-            <button
-              onClick={() => setView("main")}
-              className="mb-4 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-1"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              {t("nav.back_to_home")}
-            </button>
-            <SearchInventory cache={cache} selectedGroupId={selectedGroupId} />
-          </div>
+          <SearchInventory
+            cache={cache}
+            selectedGroupId={selectedGroupId}
+            onBack={() => setView("main")}
+          />
         ) : view === "bin" ? (
-          <div>
-            <button
-              onClick={() => setView("main")}
-              className="mb-4 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-1"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              {t("nav.back_to_home")}
-            </button>
-            <Bin selectedGroupId={selectedGroupId} />
-          </div>
+          <Bin
+            selectedGroupId={selectedGroupId}
+            onBack={() => setView("main")}
+          />
         ) : view === "qr-generator" ? (
-          <div>
-            <button
-              onClick={() => setView("main")}
-              className="mb-4 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-1"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              {t("nav.back_to_home")}
-            </button>
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">
-              {t("qr.title")}
-            </h2>
-            <QRCodeGenerator />
-          </div>
+          <QRCodeGenerator />
         ) : dbReady ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -334,7 +254,7 @@ const App: React.FC = () => {
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => setView("bin")}
-                  className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
                 >
                   {t("nav.bin")}
                 </button>
