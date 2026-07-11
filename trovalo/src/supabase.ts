@@ -16,7 +16,8 @@ export const supabase = createClient(
 
 export interface Box {
   id: string;
-  zone: string;
+  side: string;
+  level: string;
   items: string[];
   updated_at: number;
   owner_id?: string;

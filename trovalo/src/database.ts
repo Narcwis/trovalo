@@ -6,8 +6,8 @@ class TrovaloCache extends Dexie {
 
   constructor() {
     super("trovalo_cache");
-    this.version(1).stores({
-      boxes: "id, zone, updated_at",
+    this.version(2).stores({
+      boxes: "id, side, level, updated_at",
     });
   }
 }

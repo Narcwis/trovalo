@@ -8,45 +8,63 @@ const MAX_QR_SIZE_CM = 10;
 const MIN_COUNT = 1;
 const MAX_COUNT = 500;
 
+async function generateWithOverlay(
+  text: string,
+  boxNumber: number,
+  width: number,
+): Promise<string> {
+  const canvas = document.createElement("canvas");
+  await QRCode.toCanvas(canvas, text, {
+    width,
+    margin: 1,
+    color: { dark: "#000000", light: "#ffffff" },
+  });
+  const ctx = canvas.getContext("2d")!;
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+  const r = canvas.width * 0.09;
+  const fontSize = Math.round(canvas.width * 0.09);
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#000000";
+  ctx.font = `bold ${fontSize}px sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(String(boxNumber), cx, cy);
+  return canvas.toDataURL();
+}
+
 export const QRCodeGenerator: React.FC = () => {
   const { t } = useTranslation();
   const [count, setCount] = useState(10);
   const [qrSizeCm, setQrSizeCm] = useState(5);
-  const [codes, setCodes] = useState<{ id: string; dataUrl: string }[] | null>(
-    null,
-  );
+  const [codes, setCodes] = useState<
+    { id: string; boxNumber: number; dataUrl: string }[] | null
+  >(null);
   const [generating, setGenerating] = useState(false);
 
   const handleGenerate = useCallback(async () => {
     setGenerating(true);
     setCodes(null);
 
-    // Generate QR codes in batches to avoid blocking the UI
+    const batchId = Date.now().toString(36);
     const batchSize = 50;
-    const allCodes: { id: string; dataUrl: string }[] = [];
+    const allCodes: { id: string; boxNumber: number; dataUrl: string }[] = [];
+    const width = Math.max(200, qrSizeCm * 80);
 
     for (let i = 0; i < count; i += batchSize) {
       const batch = Math.min(batchSize, count - i);
       const promises = Array.from({ length: batch }, async (_, j) => {
-        const idx = i + j;
-        const id = `box-${idx + 1}`;
-        // Use a UUID-style anchor as specified in the README:
-        // "QR codes printed onto physical storage boxes must hold simple,
-        //  immutable uniquely identifiable anchors (e.g., UUID strings like box-8f73b2)"
-        const anchor = `box-${Date.now().toString(36)}-${idx}`;
+        const boxNumber = i + j + 1;
+        const id = `qr-${batchId}-${boxNumber}`;
         try {
-          const dataUrl = await QRCode.toDataURL(anchor, {
-            width: Math.max(200, qrSizeCm * 80),
-            margin: 1,
-            color: {
-              dark: "#000000",
-              light: "#ffffff",
-            },
-          });
-          return { id: anchor, dataUrl };
+          const dataUrl = await generateWithOverlay(id, boxNumber, width);
+          return { id, boxNumber, dataUrl };
         } catch (err) {
           console.error("Failed to generate QR code", err);
-          return { id: anchor, dataUrl: "" };
+          return { id, boxNumber, dataUrl: "" };
         }
       });
       const results = await Promise.all(promises);
@@ -62,7 +80,6 @@ export const QRCodeGenerator: React.FC = () => {
       {!codes ? (
         <div className="max-w-lg mx-auto">
           <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
-            {/* QR Code count input */}
             <div>
               <label
                 htmlFor="qr-count"
@@ -88,7 +105,6 @@ export const QRCodeGenerator: React.FC = () => {
               </p>
             </div>
 
-            {/* QR size input (cm) */}
             <div>
               <label
                 htmlFor="qr-size"
@@ -116,14 +132,13 @@ export const QRCodeGenerator: React.FC = () => {
               </p>
             </div>
 
-            {/* Preview of layout */}
             <div className="p-3 bg-gray-50 rounded-md text-sm text-gray-600">
               <p>
                 <strong>{t("qr.preview")}:</strong> {count}{" "}
                 {t("qr.codes").toLowerCase()} &times; {qrSizeCm} cm ={" "}
                 {(() => {
                   const qrSizeMm = qrSizeCm * 10;
-                  const usableW = 210 - 30; // A4 - margins
+                  const usableW = 210 - 30;
                   const usableH = 297 - 30;
                   const cellSize = qrSizeMm + 5;
                   const cols = Math.floor(usableW / cellSize);
@@ -135,7 +150,6 @@ export const QRCodeGenerator: React.FC = () => {
               </p>
             </div>
 
-            {/* Generate button */}
             <button
               onClick={handleGenerate}
               disabled={generating}
@@ -154,7 +168,6 @@ export const QRCodeGenerator: React.FC = () => {
         </div>
       ) : (
         <div>
-          {/* Back button */}
           <button
             onClick={() => setCodes(null)}
             className="mb-4 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-1"
@@ -175,7 +188,6 @@ export const QRCodeGenerator: React.FC = () => {
             {t("qr.back")}
           </button>
 
-          {/* Info summary */}
           <div className="mb-4 p-3 bg-green-50 text-green-800 rounded-md text-sm">
             <p>
               {t("qr.generated_count")}:{" "}
@@ -186,7 +198,6 @@ export const QRCodeGenerator: React.FC = () => {
             </p>
           </div>
 
-          {/* Print grid */}
           <QRCodePrintGrid codes={codes} qrSizeCm={qrSizeCm} />
         </div>
       )}

@@ -1,7 +1,13 @@
-import React, { useEffect, useRef } from "react";
+import React from "react";
+
+interface QRCodeData {
+  id: string;
+  boxNumber: number;
+  dataUrl: string;
+}
 
 interface QRCodePrintGridProps {
-  codes: { id: string; dataUrl: string }[];
+  codes: QRCodeData[];
   qrSizeCm: number;
 }
 
@@ -10,9 +16,6 @@ const A4_MM_HEIGHT = 297;
 const MARGIN_MM = 15;
 const GAP_MM = 5;
 
-/**
- * Calculate how many QR codes fit on one A4 page.
- */
 function calculateGrid(qrSizeCm: number) {
   const qrSizeMm = qrSizeCm * 10;
   const usableWidth = A4_MM_WIDTH - MARGIN_MM * 2;
@@ -31,15 +34,13 @@ export const QRCodePrintGrid: React.FC<QRCodePrintGridProps> = ({
   const { cols, rows, perPage, qrSizeMm } = calculateGrid(qrSizeCm);
   const pageCount = Math.ceil(codes.length / perPage);
 
-  // Pad codes to fill complete pages
   const padded = [...codes];
   while (padded.length < pageCount * perPage) {
-    padded.push({ id: "", dataUrl: "" });
+    padded.push({ id: "", boxNumber: 0, dataUrl: "" });
   }
 
   return (
     <div className="print-content">
-      {/* Page info header - hidden in print */}
       <div className="print:hidden mb-4 p-3 bg-blue-50 text-blue-800 rounded-md text-sm">
         <p>
           <strong>Layout:</strong> {cols} columns &times; {rows} rows ={" "}
@@ -51,7 +52,6 @@ export const QRCodePrintGrid: React.FC<QRCodePrintGridProps> = ({
         </p>
       </div>
 
-      {/* Generate pages */}
       {Array.from({ length: pageCount }).map((_, pageIdx) => (
         <div
           key={pageIdx}
@@ -125,7 +125,6 @@ export const QRCodePrintGrid: React.FC<QRCodePrintGridProps> = ({
         </div>
       ))}
 
-      {/* Print button - hidden when printing */}
       <div className="print:hidden mt-6 flex justify-center">
         <button
           onClick={() => window.print()}

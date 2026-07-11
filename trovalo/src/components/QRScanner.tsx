@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Scanner } from "@yudiel/react-qr-scanner";
 import { supabase, type Box } from "../supabase";
@@ -9,14 +9,101 @@ interface QRScannerProps {
 
 type Phase = "scanning" | "loaded" | "saving" | "saved";
 
+function useDistinctValues(column: string) {
+  const [values, setValues] = useState<string[]>([]);
+  useEffect(() => {
+    supabase
+      .from("boxes")
+      .select(column)
+      .then(({ data }) => {
+        if (data) {
+          const vals = [
+            ...new Set(data.map((r: any) => r[column]).filter(Boolean)),
+          ] as string[];
+          vals.sort();
+          setValues(vals);
+        }
+      });
+  }, [column]);
+  return values;
+}
+
+function Combobox({
+  value,
+  onChange,
+  options,
+  placeholder,
+  label,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+  placeholder: string;
+  label: string;
+}) {
+  const [focused, setFocused] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const filtered = options.filter(
+    (o) => o.toLowerCase().includes(value.toLowerCase()) && o !== value,
+  );
+  const show = focused && filtered.length > 0;
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setFocused(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label}
+      </label>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={() => setFocused(true)}
+        placeholder={placeholder}
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      />
+      {show && (
+        <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+          {filtered.map((o) => (
+            <li
+              key={o}
+              onClick={() => {
+                onChange(o);
+                setFocused(false);
+              }}
+              className="px-3 py-1.5 text-sm text-gray-700 hover:bg-indigo-50 cursor-pointer"
+            >
+              {o}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export const QRScanner: React.FC<QRScannerProps> = ({ onBack }) => {
   const { t } = useTranslation();
   const [phase, setPhase] = useState<Phase>("scanning");
   const [boxId, setBoxId] = useState<string>("");
-  const [zone, setZone] = useState("");
+  const [side, setSide] = useState("");
+  const [level, setLevel] = useState("");
   const [items, setItems] = useState<string[]>([]);
   const [itemInput, setItemInput] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  const existingSides = useDistinctValues("side");
+  const existingLevels = useDistinctValues("level");
 
   useEffect(() => {
     if (!boxId) return;
@@ -32,10 +119,12 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onBack }) => {
         }
         if (data) {
           const box = data as Box;
-          setZone(box.zone);
+          setSide(box.side);
+          setLevel(box.level);
           setItems(box.items);
         } else {
-          setZone("");
+          setSide("");
+          setLevel("");
           setItems([]);
         }
         setPhase("loaded");
@@ -69,12 +158,13 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onBack }) => {
     setItems(items.filter((_, i) => i !== idx));
 
   const handleSave = async () => {
-    if (!zone.trim()) return;
+    if (!side.trim() || !level.trim()) return;
     setPhase("saving");
     const { error: err } = await supabase.from("boxes").upsert(
       {
         id: boxId,
-        zone: zone.trim(),
+        side: side.trim(),
+        level: level.trim(),
         items,
         updated_at: Date.now(),
       },
@@ -91,7 +181,8 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onBack }) => {
   const reset = () => {
     setPhase("scanning");
     setBoxId("");
-    setZone("");
+    setSide("");
+    setLevel("");
     setItems([]);
     setItemInput("");
     setError(null);
@@ -178,8 +269,10 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onBack }) => {
             <h3 className="mt-4 text-lg font-medium text-green-800">
               {t("scan.saved_title")}
             </h3>
-            <p className="mt-1 text-sm text-green-600 break-all">{boxId}</p>
-            <p className="mt-1 text-sm text-green-600">{t("scan.saved_zone")}: {zone}</p>
+            <p className="mt-1 text-sm text-green-600">{boxId}</p>
+            <p className="mt-1 text-sm text-green-600">
+              {side} &middot; {t("scan.level_label")} {level}
+            </p>
             <div className="mt-6 flex gap-3 justify-center">
               <button
                 onClick={reset}
@@ -223,7 +316,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onBack }) => {
       </button>
 
       <h2 className="text-xl font-semibold text-gray-900 mb-2">
-        {zone ? t("scan.edit_title") : t("scan.create_title")}
+        {side || level ? t("scan.edit_title") : t("scan.create_title")}
       </h2>
       <p className="text-sm text-gray-500 font-mono mb-6 break-all">{boxId}</p>
 
@@ -233,19 +326,22 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onBack }) => {
         </div>
       )}
 
-      <div className="max-w-md mx-auto space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t("scan.zone_label")}
-          </label>
-          <input
-            type="text"
-            value={zone}
-            onChange={(e) => setZone(e.target.value)}
-            placeholder={t("scan.zone_placeholder")}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-        </div>
+      <div className="max-w-md mx-auto space-y-4">
+        <Combobox
+          label={t("scan.side_label")}
+          placeholder={t("scan.side_placeholder")}
+          value={side}
+          onChange={setSide}
+          options={existingSides}
+        />
+
+        <Combobox
+          label={t("scan.level_label")}
+          placeholder={t("scan.level_placeholder")}
+          value={level}
+          onChange={setLevel}
+          options={existingLevels}
+        />
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -300,7 +396,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onBack }) => {
           )}
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 pt-2">
           <button
             onClick={reset}
             className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
@@ -309,7 +405,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onBack }) => {
           </button>
           <button
             onClick={handleSave}
-            disabled={!zone.trim() || phase === "saving"}
+            disabled={!side.trim() || !level.trim() || phase === "saving"}
             className="flex-1 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
           >
             {phase === "saving" ? t("scan.saving") : t("scan.save")}

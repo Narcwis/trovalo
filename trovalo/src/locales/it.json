@@ -25,8 +25,10 @@
     "title": "Scansiona Scatola",
     "create_title": "Nuova Scatola",
     "edit_title": "Modifica Scatola",
-    "zone_label": "Zona",
-    "zone_placeholder": "es. Scaffale A, Garage 3",
+    "side_label": "Lato",
+    "side_placeholder": "es. A, B, Sinistra, Destra",
+    "level_label": "Livello",
+    "level_placeholder": "es. Pavimento, 1, 2, Scaffale",
     "items_label": "Contenuto",
     "item_placeholder": "Aggiungi oggetto",
     "add_item": "Aggiungi",
@@ -34,9 +36,7 @@
     "saving": "Salvataggio...",
     "cancel": "Annulla",
     "saved_title": "Scatola Salvata!",
-    "saved_zone": "Zona",
-    "scan_another": "Scansiona Altro",
-    "result": "Codice QR Scansionato"
+    "scan_another": "Scansiona Altro"
   },
   "ui": {
     "scan": "Scansiona Scatola",

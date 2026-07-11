@@ -25,8 +25,10 @@
     "title": "Scan Box",
     "create_title": "New Box",
     "edit_title": "Edit Box",
-    "zone_label": "Zone",
-    "zone_placeholder": "e.g. Shelf A, Garage 3",
+    "side_label": "Side",
+    "side_placeholder": "e.g. A, B, Left, Right",
+    "level_label": "Level",
+    "level_placeholder": "e.g. Floor, 1, 2, Shelf",
     "items_label": "Contents",
     "item_placeholder": "Add an item",
     "add_item": "Add",
@@ -34,9 +36,7 @@
     "saving": "Saving...",
     "cancel": "Cancel",
     "saved_title": "Box Saved!",
-    "saved_zone": "Zone",
-    "scan_another": "Scan Another",
-    "result": "Scanned QR Code"
+    "scan_another": "Scan Another"
   },
   "ui": {
     "scan": "Scan Box",
