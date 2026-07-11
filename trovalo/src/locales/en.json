@@ -23,8 +23,19 @@
   },
   "scan": {
     "title": "Scan Box",
-    "no_camera": "No camera found on this device.",
-    "camera_error": "Could not access the camera. Check permissions.",
+    "create_title": "New Box",
+    "edit_title": "Edit Box",
+    "zone_label": "Zone",
+    "zone_placeholder": "e.g. Shelf A, Garage 3",
+    "items_label": "Contents",
+    "item_placeholder": "Add an item",
+    "add_item": "Add",
+    "save": "Save Box",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "saved_title": "Box Saved!",
+    "saved_zone": "Zone",
+    "scan_another": "Scan Another",
     "result": "Scanned QR Code"
   },
   "ui": {

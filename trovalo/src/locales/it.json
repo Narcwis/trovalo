@@ -23,8 +23,19 @@
   },
   "scan": {
     "title": "Scansiona Scatola",
-    "no_camera": "Nessuna fotocamera trovata su questo dispositivo.",
-    "camera_error": "Impossibile accedere alla fotocamera. Controlla i permessi.",
+    "create_title": "Nuova Scatola",
+    "edit_title": "Modifica Scatola",
+    "zone_label": "Zona",
+    "zone_placeholder": "es. Scaffale A, Garage 3",
+    "items_label": "Contenuto",
+    "item_placeholder": "Aggiungi oggetto",
+    "add_item": "Aggiungi",
+    "save": "Salva Scatola",
+    "saving": "Salvataggio...",
+    "cancel": "Annulla",
+    "saved_title": "Scatola Salvata!",
+    "saved_zone": "Zona",
+    "scan_another": "Scansiona Altro",
     "result": "Codice QR Scansionato"
   },
   "ui": {
