@@ -17,6 +17,16 @@
     "admin_role": "Amministratore",
     "member_role": "Membro"
   },
+  "update": {
+    "available": "È disponibile una nuova versione.",
+    "refresh": "Aggiorna per riceverla"
+  },
+  "scan": {
+    "title": "Scansiona Scatola",
+    "no_camera": "Nessuna fotocamera trovata su questo dispositivo.",
+    "camera_error": "Impossibile accedere alla fotocamera. Controlla i permessi.",
+    "result": "Codice QR Scansionato"
+  },
   "ui": {
     "scan": "Scansiona Scatola",
     "search": "Cerca Inventario"

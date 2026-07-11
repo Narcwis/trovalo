@@ -17,6 +17,16 @@
     "admin_role": "Administrator",
     "member_role": "Member"
   },
+  "update": {
+    "available": "A new version is available.",
+    "refresh": "Refresh to update"
+  },
+  "scan": {
+    "title": "Scan Box",
+    "no_camera": "No camera found on this device.",
+    "camera_error": "Could not access the camera. Check permissions.",
+    "result": "Scanned QR Code"
+  },
   "ui": {
     "scan": "Scan Box",
     "search": "Search Inventory"

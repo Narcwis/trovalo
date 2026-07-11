@@ -3,12 +3,14 @@ import { useTranslation } from "react-i18next";
 import type { User } from "@supabase/supabase-js";
 import { SyncIndicator } from "./components/SyncIndicator";
 import { QRCodeGenerator } from "./components/QRCodeGenerator";
+import { QRScanner } from "./components/QRScanner";
 import { LoginPage } from "./components/LoginPage";
 import { AdminConsole } from "./components/AdminConsole";
 import { initDb, onSyncStatus, type SyncStatus } from "./database";
 import { supabase } from "./supabase";
+import { APP_VERSION, checkForUpdate } from "./version";
 
-type View = "main" | "qr-generator" | "admin";
+type View = "main" | "qr-generator" | "admin" | "scanner";
 
 const App: React.FC = () => {
   const { t } = useTranslation();
@@ -17,6 +19,7 @@ const App: React.FC = () => {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("connecting");
   const [dbReady, setDbReady] = useState(false);
   const [view, setView] = useState<View>("main");
+  const [updateAvailable, setUpdateAvailable] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -38,6 +41,11 @@ const App: React.FC = () => {
     const unsub = onSyncStatus(setSyncStatus);
     initDb().then(() => setDbReady(true));
     return unsub;
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    checkForUpdate().then(setUpdateAvailable);
   }, [user]);
 
   const isAdmin = user?.email === import.meta.env.VITE_ADMIN_EMAIL;
@@ -64,8 +72,28 @@ const App: React.FC = () => {
         />
         {view !== "admin" && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <h1 className="text-2xl font-bold text-gray-900">Trovalo</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-gray-900">Trovalo</h1>
+              {APP_VERSION && (
+                <span className="text-xs text-gray-400 font-mono">
+                  v{APP_VERSION.slice(0, 7)}
+                </span>
+              )}
+            </div>
             <p className="mt-1 text-sm text-gray-500">Garage Inventory Manager</p>
+          </div>
+        )}
+        {updateAvailable && (
+          <div className="bg-amber-50 border-b border-amber-200">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between">
+              <p className="text-sm text-amber-800">{t("update.available")}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="text-sm font-medium text-amber-900 hover:text-amber-700 underline"
+              >
+                {t("update.refresh")}
+              </button>
+            </div>
           </div>
         )}
       </header>
@@ -94,6 +122,8 @@ const App: React.FC = () => {
             </button>
             <AdminConsole />
           </div>
+        ) : view === "scanner" ? (
+          <QRScanner onBack={() => setView("main")} />
         ) : view === "qr-generator" ? (
           <div>
             <button
@@ -123,7 +153,10 @@ const App: React.FC = () => {
         ) : dbReady ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <button className="flex items-center justify-center p-8 bg-white rounded-lg shadow-sm border-2 border-transparent hover:border-indigo-500 transition-all duration-200">
+              <button
+                onClick={() => setView("scanner")}
+                className="flex items-center justify-center p-8 bg-white rounded-lg shadow-sm border-2 border-transparent hover:border-indigo-500 transition-all duration-200"
+              >
                 <div className="text-center">
                   <svg
                     className="mx-auto h-12 w-12 text-indigo-500"

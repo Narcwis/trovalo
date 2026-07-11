@@ -1,15 +1,32 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
+
+function versionPlugin(): Plugin {
+  return {
+    name: "version-json",
+    generateBundle() {
+      const version =
+        process.env.VITE_APP_VERSION || Date.now().toString(36);
+      this.emitFile({
+        type: "asset",
+        fileName: "version.json",
+        source: JSON.stringify({ version }),
+      });
+    },
+  };
+}
 
 export default defineConfig({
   base: "/trovalo/",
   plugins: [
     react(),
+    versionPlugin(),
     VitePWA({
       registerType: "autoUpdate",
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,json}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
+        globIgnores: ["**/version.json"],
         cleanupOutdatedCaches: true,
       },
       manifest: {
