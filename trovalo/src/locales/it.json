@@ -15,7 +15,9 @@
     "name": "Nome",
     "role": "Ruolo",
     "admin_role": "Amministratore",
-    "member_role": "Membro"
+    "member_role": "Membro",
+    "no_access_title": "Nessun Accesso",
+    "no_access_message": "Non sei membro di nessun gruppo. Chiedi all'amministratore di aggiungerti a un gruppo."
   },
   "update": {
     "available": "È disponibile una nuova versione.",
@@ -65,6 +67,7 @@
     "empty": "Vuoto",
     "item_count": "oggetto",
     "item_count_plural": "oggetti",
+    "group": "Gruppo",
     "move_to_bin": "Sposta nel Cestino",
     "in_bin": "Questa scatola è nel Cestino.",
     "edit": "Modifica",

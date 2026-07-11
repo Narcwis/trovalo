@@ -29,6 +29,10 @@ const App: React.FC = () => {
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [groups, setGroups] = useState<UserGroup[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState("");
+  const [noAccess, setNoAccess] = useState(false);
+
+  const groupName =
+    groups.find((g) => g.id === selectedGroupId)?.name || t("nav.all_groups");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -63,12 +67,13 @@ const App: React.FC = () => {
     const isAdmin = email === import.meta.env.VITE_ADMIN_EMAIL;
 
     (async () => {
+      let loaded: UserGroup[] = [];
       if (isAdmin) {
         const { data } = await supabase
           .from("groups")
           .select("id, name")
           .order("name");
-        if (data) setGroups(data);
+        if (data) loaded = data;
       } else {
         const { data: memberships } = await supabase
           .from("group_members")
@@ -81,8 +86,15 @@ const App: React.FC = () => {
             .select("id, name")
             .in("id", ids)
             .order("name");
-          if (gData) setGroups(gData);
+          if (gData) loaded = gData;
         }
+      }
+      setGroups(loaded);
+      if (loaded.length > 0 && !selectedGroupId) {
+        setSelectedGroupId(loaded[0].id);
+      }
+      if (!isAdmin && loaded.length === 0) {
+        setNoAccess(true);
       }
     })();
   }, [user, dbReady]);
@@ -99,6 +111,26 @@ const App: React.FC = () => {
 
   if (!user) {
     return <LoginPage />;
+  }
+
+  if (dbReady && noAccess) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="max-w-sm w-full text-center">
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-8">
+            <svg className="mx-auto h-12 w-12 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <h2 className="mt-4 text-lg font-semibold text-amber-800">
+              {t("auth.no_access_title")}
+            </h2>
+            <p className="mt-2 text-sm text-amber-700">
+              {t("auth.no_access_message")}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -166,6 +198,8 @@ const App: React.FC = () => {
             cache={cache}
             selectedGroupId={selectedGroupId}
             onBack={() => setView("main")}
+            groupNames={Object.fromEntries(groups.map((g) => [g.id, g.name]))}
+            isAdmin={isAdmin}
           />
         ) : view === "bin" ? (
           <Bin

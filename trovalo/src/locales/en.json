@@ -15,7 +15,9 @@
     "name": "Name",
     "role": "Role",
     "admin_role": "Administrator",
-    "member_role": "Member"
+    "member_role": "Member",
+    "no_access_title": "No Access",
+    "no_access_message": "You are not a member of any group. Ask your administrator to add you to a group."
   },
   "update": {
     "available": "A new version is available.",
@@ -65,6 +67,7 @@
     "empty": "Empty",
     "item_count": "item",
     "item_count_plural": "items",
+    "group": "Group",
     "move_to_bin": "Move to Bin",
     "in_bin": "This box is in the Bin.",
     "edit": "Edit",

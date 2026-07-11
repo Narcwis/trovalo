@@ -10,12 +10,16 @@ interface SearchInventoryProps {
   };
   selectedGroupId: string;
   onBack: () => void;
+  groupNames: Record<string, string>;
+  isAdmin: boolean;
 }
 
 export const SearchInventory: React.FC<SearchInventoryProps> = ({
   cache,
   selectedGroupId,
   onBack,
+  groupNames,
+  isAdmin,
 }) => {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
@@ -293,6 +297,16 @@ export const SearchInventory: React.FC<SearchInventoryProps> = ({
                   </p>
                 </div>
               </div>
+              {isAdmin && selectedBox.group_id && groupNames[selectedBox.group_id] && (
+                <div>
+                  <span className="text-xs text-gray-400 uppercase tracking-wide">
+                    {t("search.group")}
+                  </span>
+                  <p className="text-sm font-medium text-gray-900 mt-0.5">
+                    {groupNames[selectedBox.group_id]}
+                  </p>
+                </div>
+              )}
               <div>
                 <span className="text-xs text-gray-400 uppercase tracking-wide">
                   {t("search.contents")}
@@ -362,6 +376,9 @@ export const SearchInventory: React.FC<SearchInventoryProps> = ({
                     </p>
                     <p className="text-xs text-gray-500 mt-0.5">
                       {box.side} &middot; {t("search.level")} {box.level}
+                      {isAdmin && box.group_id && groupNames[box.group_id] && (
+                        <> &middot; {groupNames[box.group_id]}</>
+                      )}
                     </p>
                   </div>
                   <span className="text-xs text-gray-400 shrink-0">
