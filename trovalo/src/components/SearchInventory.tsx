@@ -2,13 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import type Dexie from "dexie";
 import { supabase, type Box } from "../supabase";
+import { boxNumber } from "../lib/box-number";
 
-interface SearchInventoryProps {
-  cache: {
-    boxes: Dexie.Table<Box, string>;
-  };
-  selectedGroupId: string;
-  onBack: () => void;
+function boxNumber(id: string): string {
+  const m = id.match(/-(\d+)$/);
+  return m ? m[1] : id;
 }
 
 export const SearchInventory: React.FC<SearchInventoryProps> = ({
