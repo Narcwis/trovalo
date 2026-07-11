@@ -8,9 +8,18 @@ arch:
   - aarch64
 ports:
   8080/tcp: 8080
+ports_description:
+  8080/tcp: "Web interface"
 map:
   - share:rw
-  - config:rw
+boot: "auto"
+host_network: false
+ingress: false
+panel_admin: false
+startup: "application"
+webui: "http://[HOST]:[PORT:8080]"
+homeassistant: "2023.8.0"
+hassio_role: "default"
 options:
   allowed_devices: []
   allow_new_devices: true
