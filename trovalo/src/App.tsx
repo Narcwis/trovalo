@@ -10,7 +10,7 @@ import { LoginPage } from "./components/LoginPage";
 import { AdminConsole } from "./components/AdminConsole";
 import { initDb, onSyncStatus, cache, type SyncStatus } from "./database";
 import { supabase } from "./supabase";
-import { APP_VERSION, checkForUpdate } from "./version";
+import { APP_VERSION, checkForUpdate, triggerAppUpdate } from "./version";
 
 type View = "main" | "qr-generator" | "admin" | "scanner" | "search" | "bin";
 
@@ -58,7 +58,13 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (!user) return;
-    checkForUpdate().then(setUpdateAvailable);
+    checkForUpdate().then((needsUpdate) => {
+      setUpdateAvailable(needsUpdate);
+      if (needsUpdate) {
+        // Kick the service worker to start updating in the background
+        navigator.serviceWorker?.getRegistration().then((r) => r?.update());
+      }
+    });
   }, [user]);
 
   useEffect(() => {
@@ -175,7 +181,7 @@ const App: React.FC = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between">
               <p className="text-sm text-amber-800">{t("update.available")}</p>
               <button
-                onClick={() => window.location.reload()}
+                onClick={() => triggerAppUpdate()}
                 className="text-sm font-medium text-amber-900 hover:text-amber-700 underline"
               >
                 {t("update.refresh")}

@@ -36,3 +36,20 @@ export async function checkForUpdate(): Promise<boolean> {
     return false;
   }
 }
+
+export async function triggerAppUpdate(): Promise<void> {
+  // 1. Tell any waiting service worker to take control
+  const registration = await navigator.serviceWorker?.getRegistration();
+  if (registration?.waiting) {
+    registration.waiting.postMessage({ type: "SKIP_WAITING" });
+    await new Promise<void>((resolve) => {
+      navigator.serviceWorker.addEventListener(
+        "controllerchange",
+        () => resolve(),
+        { once: true },
+      );
+    });
+  }
+  // 2. Hard-reload: bypass the service worker for this navigation
+  window.location.reload();
+}
