@@ -40,7 +40,8 @@
     "saved_title": "Scatola Salvata!",
     "scan_another": "Scansiona Altro",
     "in_bin": "Questa scatola è nel Cestino. Ripristina per modificarla.",
-    "restore": "Ripristina"
+    "restore": "Ripristina",
+    "invalid_qr": "Questo codice QR non appartiene a Trovalo."
   },
   "ui": {
     "scan": "Scansiona Scatola",

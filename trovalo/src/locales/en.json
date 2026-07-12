@@ -40,7 +40,8 @@
     "saved_title": "Box Saved!",
     "scan_another": "Scan Another",
     "in_bin": "This box is in the Bin. Restore to edit it.",
-    "restore": "Restore"
+    "restore": "Restore",
+    "invalid_qr": "This QR code doesn't belong to Trovalo."
   },
   "ui": {
     "scan": "Scan Box",

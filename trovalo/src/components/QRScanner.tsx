@@ -142,10 +142,14 @@ export const QRScanner: React.FC<QRScannerProps> = ({
     (detectedCodes: { rawValue: string }[]) => {
       const code = detectedCodes[0]?.rawValue;
       if (code && phase === "scanning") {
+        if (!code.startsWith("trovalo-")) {
+          setError(t("scan.invalid_qr"));
+          return;
+        }
         setBoxId(code);
       }
     },
-    [phase],
+    [phase, t],
   );
 
   const handleScanError = useCallback(
