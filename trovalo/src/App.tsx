@@ -221,13 +221,15 @@ const App: React.FC = () => {
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
+                    strokeWidth={1.5}
                   >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4v1m6 11h2m-6 0h-2v4m0-11v8m0 0V8m0 0h2m-6 0h-2m2 0v8"
+                      d="M3 7V5a2 2 0 012-2h2M3 17v2a2 2 0 002 2h2M17 3h2a2 2 0 012 2v2M17 21h2a2 2 0 002-2v-2"
                     />
+                    <line x1="12" y1="8" x2="12" y2="16" strokeWidth={1.5} />
+                    <line x1="8" y1="12" x2="16" y2="12" strokeWidth={1.5} />
                   </svg>
                   <span className="mt-4 block text-lg font-medium text-gray-900">
                     {t("ui.scan")}
