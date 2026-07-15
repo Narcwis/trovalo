@@ -71,35 +71,57 @@ const App: React.FC = () => {
     if (!user || !dbReady) return;
     const email = user.email!;
     const isAdmin = email === import.meta.env.VITE_ADMIN_EMAIL;
+    const CACHE_KEY = "trovalo_user_groups";
 
     (async () => {
       let loaded: UserGroup[] = [];
-      if (isAdmin) {
-        const { data } = await supabase
-          .from("groups")
-          .select("id, name")
-          .order("name");
-        if (data) loaded = data;
-      } else {
-        const { data: memberships } = await supabase
-          .from("group_members")
-          .select("group_id")
-          .eq("email", email);
-        if (memberships && memberships.length > 0) {
-          const ids = memberships.map((r) => r.group_id);
-          const { data: gData } = await supabase
+      let online = true;
+
+      try {
+        if (isAdmin) {
+          const { data, error } = await supabase
             .from("groups")
             .select("id, name")
-            .in("id", ids)
             .order("name");
-          if (gData) loaded = gData;
+          if (error) throw error;
+          if (data) loaded = data;
+        } else {
+          const { data: memberships, error: err1 } = await supabase
+            .from("group_members")
+            .select("group_id")
+            .eq("email", email);
+          if (err1) throw err1;
+          if (memberships && memberships.length > 0) {
+            const ids = memberships.map((r) => r.group_id);
+            const { data: gData, error: err2 } = await supabase
+              .from("groups")
+              .select("id, name")
+              .in("id", ids)
+              .order("name");
+            if (err2) throw err2;
+            if (gData) loaded = gData;
+          }
+        }
+      } catch {
+        // Network error (offline) — try loading from cache
+        online = false;
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+          try {
+            loaded = JSON.parse(cached);
+          } catch {}
         }
       }
+
+      if (online && loaded.length > 0) {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(loaded));
+      }
+
       setGroups(loaded);
       if (loaded.length > 0 && !selectedGroupId) {
         setSelectedGroupId(loaded[0].id);
       }
-      if (!isAdmin && loaded.length === 0) {
+      if (!isAdmin && loaded.length === 0 && online) {
         setNoAccess(true);
       }
     })();
@@ -153,7 +175,12 @@ const App: React.FC = () => {
               <h1 className="text-2xl font-bold text-gray-900">Trovalo</h1>
               {APP_VERSION && (
                 <span className="text-xs text-gray-400 font-mono">
-                  v{APP_VERSION.slice(0, 7)}
+                  {(() => {
+                    const d = new Date(APP_VERSION);
+                    if (isNaN(d.getTime())) return APP_VERSION.slice(0, 7);
+                    const pad = (n: number) => String(n).padStart(2, "0");
+                    return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+                  })()}
                 </span>
               )}
             </div>

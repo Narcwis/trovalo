@@ -37,12 +37,16 @@ jobs:
 
       - run: npm test
 
+      - name: Set build timestamp
+        id: timestamp
+        run: echo "ts=$(date -u +%Y-%m-%dT%H:%M:%S%z)" >> "$GITHUB_OUTPUT"
+
       - run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_ADMIN_EMAIL: ${{ secrets.VITE_ADMIN_EMAIL }}
-          VITE_APP_VERSION: ${{ github.sha }}
+          VITE_APP_VERSION: ${{ steps.timestamp.outputs.ts }}
 
       - uses: actions/configure-pages@v4
 
