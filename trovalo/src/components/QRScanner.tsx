@@ -181,14 +181,17 @@ export const QRScanner: React.FC<QRScannerProps> = ({
       group_id: selectedGroupId || undefined,
       updated_at: Date.now(),
     };
-    // Always save locally
     await cache.boxes.put(box);
-    // Try to sync to Supabase
-    const { error: err } = await supabase.from("boxes").upsert(box, {
-      onConflict: "id",
-    });
-    if (err) {
-      console.warn("Supabase save failed, saved locally:", err.message);
+    try {
+      const { error: err } = await supabase.from("boxes").upsert(box, {
+        onConflict: "id",
+      });
+      if (err) {
+        console.warn("Supabase save failed:", err.message);
+        await enqueue("upsert", boxId, box);
+      }
+    } catch (e) {
+      console.warn("Supabase save failed (offline):", e);
       await enqueue("upsert", boxId, box);
     }
     setPhase("saved");
@@ -196,12 +199,17 @@ export const QRScanner: React.FC<QRScannerProps> = ({
 
   const handleRestore = async () => {
     await cache.boxes.update(boxId, { deleted_at: null });
-    const { error: err } = await supabase
-      .from("boxes")
-      .update({ deleted_at: null })
-      .eq("id", boxId);
-    if (err) {
-      console.warn("Supabase restore failed, updated locally:", err.message);
+    try {
+      const { error: err } = await supabase
+        .from("boxes")
+        .update({ deleted_at: null })
+        .eq("id", boxId);
+      if (err) {
+        console.warn("Supabase restore failed:", err.message);
+        await enqueue("restore", boxId);
+      }
+    } catch (e) {
+      console.warn("Supabase restore failed (offline):", e);
       await enqueue("restore", boxId);
     }
     setDeletedBox(false);

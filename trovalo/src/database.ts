@@ -52,17 +52,16 @@ export async function initDb() {
   const status = await checkConnection();
 
   if (status === "online") {
+    // Push any offline-queued changes to Supabase first
+    await processQueue();
+    // Then refresh the local cache from Supabase (includes just-pushed items)
     const { data, error } = await supabase.from("boxes").select("*");
     if (!error && data) {
       const boxes = data as Box[];
-      if (boxes.length > 0) {
-        await cache.boxes.clear();
-        await cache.boxes.bulkPut(boxes);
-      }
+      await cache.boxes.clear();
+      await cache.boxes.bulkPut(boxes);
     }
     notify("synced");
-    // Sync any offline queued changes
-    await processQueue();
   } else {
     notify(status);
   }

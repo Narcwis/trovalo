@@ -37,20 +37,34 @@ export const Bin: React.FC<BinProps> = ({ selectedGroupId, onBack }) => {
 
   const handleRestore = async (id: string) => {
     await cache.boxes.update(id, { deleted_at: null });
-    const { error: err } = await supabase
-      .from("boxes")
-      .update({ deleted_at: null })
-      .eq("id", id);
-    if (err) console.warn("Supabase restore failed, updated locally:", err.message);
-    await enqueue("restore", id);
+    try {
+      const { error: err } = await supabase
+        .from("boxes")
+        .update({ deleted_at: null })
+        .eq("id", id);
+      if (err) {
+        console.warn("Supabase restore failed:", err.message);
+        await enqueue("restore", id);
+      }
+    } catch (e) {
+      console.warn("Supabase restore failed (offline):", e);
+      await enqueue("restore", id);
+    }
     load();
   };
 
   const handleHardDelete = async (id: string) => {
     await cache.boxes.delete(id);
-    const { error: err } = await supabase.from("boxes").delete().eq("id", id);
-    if (err) console.warn("Supabase delete failed, removed locally:", err.message);
-    await enqueue("hardDelete", id);
+    try {
+      const { error: err } = await supabase.from("boxes").delete().eq("id", id);
+      if (err) {
+        console.warn("Supabase delete failed:", err.message);
+        await enqueue("hardDelete", id);
+      }
+    } catch (e) {
+      console.warn("Supabase delete failed (offline):", e);
+      await enqueue("hardDelete", id);
+    }
     load();
   };
 
