@@ -32,21 +32,25 @@ export function onSyncStatus(fn: (status: SyncStatus) => void) {
   return () => listeners.delete(fn);
 }
 
-async function checkConnection(): Promise<boolean> {
+async function checkConnection(): Promise<"online" | "offline" | "error"> {
+  if (!navigator.onLine) return "offline";
   try {
-    const { error } = await supabase.from("boxes").select("id", { count: "exact", head: true });
-    return !error;
+    const { error } = await supabase.from("boxes").select("id", {
+      count: "exact",
+      head: true,
+    });
+    return error ? "error" : "online";
   } catch {
-    return false;
+    return navigator.onLine ? "error" : "offline";
   }
 }
 
 export async function initDb() {
   notify("connecting");
 
-  const connected = await checkConnection();
+  const status = await checkConnection();
 
-  if (connected) {
+  if (status === "online") {
     const { data, error } = await supabase.from("boxes").select("*");
     if (!error && data) {
       const boxes = data as Box[];
@@ -57,7 +61,7 @@ export async function initDb() {
     }
     notify("synced");
   } else {
-    notify("offline");
+    notify(status);
   }
 
   const channel = supabase
@@ -73,15 +77,16 @@ export async function initDb() {
         }
       },
     )
-    .subscribe((status) => {
-      if (status === "SUBSCRIBED") notify("synced");
-      else if (status === "CLOSED") notify("offline");
-      else if (status === "CHANNEL_ERROR") notify("error");
+    .subscribe((subStatus) => {
+      if (subStatus === "SUBSCRIBED") notify("synced");
+      else if (subStatus === "CLOSED") notify("offline");
+      else if (subStatus === "CHANNEL_ERROR") notify("error");
     });
 
   const onOnline = async () => {
-    const ok = await checkConnection();
-    notify(ok ? "synced" : "offline");
+    notify("connecting");
+    const s = await checkConnection();
+    notify(s === "online" ? "synced" : s);
   };
   const onOffline = () => notify("offline");
 
