@@ -3,7 +3,8 @@
     "connecting": "Connecting to database...",
     "ready": "Synced & Ready",
     "offline": "Offline Mode Active",
-    "error": "Database Connection Error"
+    "error": "Database Connection Error",
+    "pending": "pending"
   },
   "auth": {
     "tagline": "Garage Inventory Manager",

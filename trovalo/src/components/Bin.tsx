@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase, type Box } from "../supabase";
 import { cache } from "../database";
+import { enqueue } from "../sync-queue";
 
 interface BinProps {
   selectedGroupId: string;
@@ -35,14 +36,21 @@ export const Bin: React.FC<BinProps> = ({ selectedGroupId, onBack }) => {
   }, [selectedGroupId]);
 
   const handleRestore = async (id: string) => {
-    await supabase.from("boxes").update({ deleted_at: null }).eq("id", id);
     await cache.boxes.update(id, { deleted_at: null });
+    const { error: err } = await supabase
+      .from("boxes")
+      .update({ deleted_at: null })
+      .eq("id", id);
+    if (err) console.warn("Supabase restore failed, updated locally:", err.message);
+    await enqueue("restore", id);
     load();
   };
 
   const handleHardDelete = async (id: string) => {
-    await supabase.from("boxes").delete().eq("id", id);
     await cache.boxes.delete(id);
+    const { error: err } = await supabase.from("boxes").delete().eq("id", id);
+    if (err) console.warn("Supabase delete failed, removed locally:", err.message);
+    await enqueue("hardDelete", id);
     load();
   };
 

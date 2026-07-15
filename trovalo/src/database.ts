@@ -1,5 +1,6 @@
 import Dexie, { type Table } from "dexie";
 import { supabase, type Box } from "./supabase";
+import { processQueue } from "./sync-queue";
 
 class TrovaloCache extends Dexie {
   boxes!: Table<Box, string>;
@@ -60,6 +61,8 @@ export async function initDb() {
       }
     }
     notify("synced");
+    // Sync any offline queued changes
+    await processQueue();
   } else {
     notify(status);
   }
@@ -87,6 +90,7 @@ export async function initDb() {
     notify("connecting");
     const s = await checkConnection();
     notify(s === "online" ? "synced" : s);
+    await processQueue();
   };
   const onOffline = () => notify("offline");
 

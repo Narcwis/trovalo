@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type Dexie from "dexie";
 import { supabase, type Box } from "../supabase";
 import { boxNumber } from "../lib/box-number";
+import { enqueue } from "../sync-queue";
 
 interface SearchInventoryProps {
   cache: {
@@ -59,8 +60,13 @@ export const SearchInventory: React.FC<SearchInventoryProps> = ({
   const handleDelete = async (box: Box) => {
     setSaving(true);
     const now = new Date().toISOString();
-    await supabase.from("boxes").update({ deleted_at: now }).eq("id", box.id);
     await cache.boxes.update(box.id, { deleted_at: now });
+    const { error: err } = await supabase
+      .from("boxes")
+      .update({ deleted_at: now })
+      .eq("id", box.id);
+    if (err) console.warn("Supabase delete failed, updated locally:", err.message);
+    await enqueue("softDelete", box.id);
     setSelectedBox({ ...box, deleted_at: now });
     setSaving(false);
     loadResults();
@@ -105,8 +111,16 @@ export const SearchInventory: React.FC<SearchInventoryProps> = ({
       items: editItems,
       updated_at: Date.now(),
     };
-    await supabase.from("boxes").upsert(updated, { onConflict: "id" });
+    // Always save locally
     await cache.boxes.put(updated);
+    // Try to sync to Supabase
+    const { error: err } = await supabase
+      .from("boxes")
+      .upsert(updated, { onConflict: "id" });
+    if (err) {
+      console.warn("Supabase save failed, saved locally:", err.message);
+      await enqueue("upsert", updated.id, updated);
+    }
     setSelectedBox(updated);
     setSaving(false);
     setEditing(false);

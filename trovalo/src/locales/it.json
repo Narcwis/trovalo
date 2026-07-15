@@ -3,7 +3,8 @@
     "connecting": "Connessione al database...",
     "ready": "Sincronizzato e Pronto",
     "offline": "Modalità Offline Attiva",
-    "error": "Errore di Connessione al Database"
+    "error": "Errore di Connessione al Database",
+    "pending": "in attesa"
   },
   "auth": {
     "tagline": "Gestore Inventario Garages",

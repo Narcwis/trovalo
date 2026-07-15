@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Scanner } from "@yudiel/react-qr-scanner";
 import { supabase, type Box } from "../supabase";
+import { cache } from "../database";
+import { enqueue } from "../sync-queue";
 
 interface QRScannerProps {
   onBack: () => void;
@@ -171,30 +173,37 @@ export const QRScanner: React.FC<QRScannerProps> = ({
   const handleSave = async () => {
     if (!side.trim() || !level.trim()) return;
     setPhase("saving");
-    const { error: err } = await supabase.from("boxes").upsert(
-      {
-        id: boxId,
-        side: side.trim(),
-        level: level.trim(),
-        items,
-        group_id: selectedGroupId || undefined,
-        updated_at: Date.now(),
-      },
-      { onConflict: "id" },
-    );
+    const box: Box = {
+      id: boxId,
+      side: side.trim(),
+      level: level.trim(),
+      items,
+      group_id: selectedGroupId || undefined,
+      updated_at: Date.now(),
+    };
+    // Always save locally
+    await cache.boxes.put(box);
+    // Try to sync to Supabase
+    const { error: err } = await supabase.from("boxes").upsert(box, {
+      onConflict: "id",
+    });
     if (err) {
-      setError(err.message);
-      setPhase("loaded");
-      return;
+      console.warn("Supabase save failed, saved locally:", err.message);
+      await enqueue("upsert", boxId, box);
     }
     setPhase("saved");
   };
 
   const handleRestore = async () => {
-    await supabase
+    await cache.boxes.update(boxId, { deleted_at: null });
+    const { error: err } = await supabase
       .from("boxes")
       .update({ deleted_at: null })
       .eq("id", boxId);
+    if (err) {
+      console.warn("Supabase restore failed, updated locally:", err.message);
+      await enqueue("restore", boxId);
+    }
     setDeletedBox(false);
   };
 

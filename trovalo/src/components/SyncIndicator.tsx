@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { SyncStatus } from "../database";
 import type { User } from "@supabase/supabase-js";
 import { signOut } from "../supabase";
+import { onPendingCount } from "../sync-queue";
 
 interface SyncIndicatorProps {
   status: SyncStatus;
@@ -16,6 +17,9 @@ export const SyncIndicator: React.FC<SyncIndicatorProps> = ({
   onNavigateAdmin,
 }) => {
   const { t } = useTranslation();
+  const [pending, setPending] = useState(0);
+
+  useEffect(() => onPendingCount(setPending), []);
 
   const isAdmin =
     user?.email === import.meta.env.VITE_ADMIN_EMAIL;
@@ -33,7 +37,14 @@ export const SyncIndicator: React.FC<SyncIndicatorProps> = ({
     <div className="flex items-center justify-between px-4 py-2 w-full bg-white border-b shadow-sm">
       <div className="flex items-center gap-2">
         <div className={`w-3 h-3 rounded-full animate-pulse ${color}`} />
-        <span className="text-xs text-gray-600 font-medium">{text}</span>
+        <span className="text-xs text-gray-600 font-medium">
+          {text}
+          {pending > 0 && (
+            <span className="ml-2 text-amber-600 font-semibold">
+              ({pending} {t("sync.pending")})
+            </span>
+          )}
+        </span>
       </div>
 
       {user && (
